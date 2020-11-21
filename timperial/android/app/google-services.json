@@ -1,0 +1,55 @@
+{
+  "project_info": {
+    "project_number": "399725705405",
+    "firebase_url": "https://timperial-4c4f5.firebaseio.com",
+    "project_id": "timperial-4c4f5",
+    "storage_bucket": "timperial-4c4f5.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:399725705405:android:a35a70d7cb4abcc9ce9fd4",
+        "android_client_info": {
+          "package_name": "com.example.timperial"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "399725705405-lvpe0kdps83lbhhh9vedqcr8hc5hf107.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.example.timperial",
+            "certificate_hash": "076121879db8a6ea24f676dd8adc975770f2d8fd"
+          }
+        },
+        {
+          "client_id": "399725705405-5lqnqifg74qcpoidnkctem1b23uabjhn.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyDA2V-yqHh3hOa4NYlE7xodBa1eg6V7VFc"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "399725705405-5lqnqifg74qcpoidnkctem1b23uabjhn.apps.googleusercontent.com",
+              "client_type": 3
+            },
+            {
+              "client_id": "399725705405-qgjq3moii6mt234enrilfd3uqkkassp1.apps.googleusercontent.com",
+              "client_type": 2,
+              "ios_info": {
+                "bundle_id": "com.example.timperial"
+              }
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
