@@ -1,9 +1,12 @@
 import 'package:flutter/material.dart';
-import 'package:timperial/auth.dart';
+import '../auth.dart';
+import 'package:flutter/material.dart';
+import 'cards_section_alignment.dart';
+import 'package:timperial/config.dart';
 
 class SwipePage extends StatefulWidget {
-  SwipePage({this.onSignedOut, this.toMatchPage, this.toProfilePage});
-
+  SwipePage({this.auth, this.onSignedOut, this.toMatchPage, this.toProfilePage});
+  final BaseAuth auth;
   final VoidCallback onSignedOut;
   final VoidCallback toMatchPage;
   final VoidCallback toProfilePage;
@@ -13,11 +16,81 @@ class SwipePage extends StatefulWidget {
 }
 
 class _SwipePageState extends State<SwipePage> {
+
+  void _signOut() async {
+    try {
+      await widget.auth.signOut();
+      widget.onSignedOut();
+    } catch (e) {
+      print('Error: $e');
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      body: Container(
-        child: Text("hello world"),
+    return SafeArea(
+      child: Scaffold(
+//      appBar: AppBar(
+//        elevation: 0.0,
+//        centerTitle: true,
+//        backgroundColor: Colors.grey[800],
+//        leading: IconButton(
+//            onPressed: () {}, icon: Icon(Icons.settings, color: Colors.grey)),
+//        title: FlatButton(
+//          child: Text('Log out'),
+//          onPressed: _signOut,
+//        ),
+//        actions: <Widget>[
+//          IconButton(
+//              onPressed: () {},
+//              icon: Icon(Icons.question_answer, color: Colors.grey)),
+//        ],
+//      ),
+        backgroundColor: Constants.SECONDARY_COLOR,
+        body: Column(
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          children: <Widget>[
+            CardsSectionAlignment(context),
+            Container(
+              color: Constants.OUTLINE_COLOR,
+              width: double.infinity,
+              height: 0.5,
+            ),
+            navigationBar()
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget navigationBar() {
+    return Container(
+      margin: EdgeInsets.fromLTRB(0, 0, 0, 0),
+      color: Constants.SECONDARY_COLOR,
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+        children: <Widget>[
+          Spacer(),
+          IconButton(
+            icon: Icon(Constants.EXPLORE_PAGE_UNSELECTED_ICON, size: 27.5,),
+            color: Constants.INACTIVE_COLOR_DARK,
+            onPressed: widget.toMatchPage,
+          ),
+          Spacer(),
+          IconButton(
+            icon: Icon(Constants.SWIPE_PAGE_SELECTED_ICON, size: 32.0),
+            onPressed: (){print("home pressed");},
+          ),
+          Spacer(),
+          IconButton(
+              icon: Icon(Constants.PROFILE_PAGE_UNSELECTED_ICON, size: 27.5),
+              onPressed: () {
+                print("go to profile page button pressed");
+                widget.toProfilePage();
+              }
+          ),
+          Spacer(),
+        ],
       ),
     );
   }

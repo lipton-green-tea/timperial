@@ -30,7 +30,8 @@ class Constants {
 
 
   static IconData GRID = Icons.grid_on;
-
+  static IconData DELETE_IMAGE_ICON = Icons.delete;
+  static IconData ADD_IMAGE_ICON = Icons.add_a_photo;
 
 
 

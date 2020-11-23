@@ -1,24 +1,67 @@
-import 'package:firebase_auth/firebase_auth.dart';
-import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:timperial/auth.dart';
+import 'package:fluttertoast/fluttertoast.dart';
 import 'package:timperial/config.dart';
 
-class LoginPage extends StatefulWidget {
-  LoginPage({this.auth, this.onSignedIn});
+class CreateAccountPage extends StatefulWidget {
+  CreateAccountPage({this.onSignedIn, this.auth});
 
-  BaseAuth auth;
   final VoidCallback onSignedIn;
+  final BaseAuth auth;
 
   @override
-  _LoginPageState createState() => _LoginPageState();
+  _CreateAccountPageState createState() => _CreateAccountPageState();
 }
 
-class _LoginPageState extends State<LoginPage> {
+class _CreateAccountPageState extends State<CreateAccountPage> {
 
   final formKey = new GlobalKey<FormState>();
+
   String _email;
   String _password;
+  String _confirmPassword;
+
+  void openPolicyDisclaimer() {
+    showDialog(
+        context: context,
+        child: AlertDialog(
+          title: Text("EULA"),
+          content: Container(
+              width: MediaQuery.of(context).size.width * 0.90,
+              height: MediaQuery.of(context).size.height * 0.90,
+              child: Column(
+                children: <Widget>[
+                  Expanded(
+                    child: SingleChildScrollView(
+                      scrollDirection: Axis.vertical,
+                      child: Text(
+                          Constants.EULA_AGREEMENT_TEXT
+                      ),
+                    ),
+                  ),
+                  RaisedButton(
+                    shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(5.0),
+                        side: BorderSide(
+                          color: Constants.DARK_TEXT,
+                          width: 0.5,
+                        )
+                    ),
+                    elevation: 0,
+                    color: Constants.BACKGROUND_COLOR,
+                    child: Text('By clicking you agree to the above policy'),
+                    onPressed: () {
+                      validateAndSubmit();
+                      Navigator.pop(context);
+                    },
+                  )
+                ],
+              )
+          ),
+        )
+    );
+  }
 
   bool validateAndSave() {
     final form = formKey.currentState;
@@ -30,26 +73,19 @@ class _LoginPageState extends State<LoginPage> {
     }
   }
 
-  void validateAndSubmit() async {
+  Future<void> validateAndSubmit() async {
     final FirebaseAuth _firebaseAuth = FirebaseAuth.instance;
     if(validateAndSave()) {
       try {
-        String userId = await widget.auth.signInWithEmailAndPassword(_email, _password);
+        String userId = await widget.auth.createUserWithEmailAndPassword(_email, _password).catchError((e) => {
+          Fluttertoast.showToast(msg: "account creation failed")
+        });
         widget.onSignedIn();
+        Navigator.pop(context);
       } catch (e) {
         print('Error: $e');
       }
     }
-  }
-
-  void moveToForgotPassword() {
-    formKey.currentState.reset();
-    //Navigator.push(context, MaterialPageRoute(builder: (context) => Center(child: CreateAccountPage(onSignedIn: widget.onSignedIn, auth: widget.auth))));
-  }
-
-  void moveToRegister() {
-    formKey.currentState.reset();
-    //Navigator.push(context, MaterialPageRoute(builder: (context) => ForgotPasswordPage(auth: widget.auth,)));
   }
 
   @override
@@ -70,7 +106,7 @@ class _LoginPageState extends State<LoginPage> {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.stretch,
                   //mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                  children: buildInputs() + buildSubmitButtons(),
+                  children: buildInputs() + buildButtons(),
                 ),
               ),
             ),
@@ -83,7 +119,7 @@ class _LoginPageState extends State<LoginPage> {
 
   List<Widget> buildInputs() {
     return [
-      SizedBox(height: 150,),
+      SizedBox(height: 90,),
       Theme(
         data: ThemeData(
           primaryColor: Constants.INACTIVE_COLOR_LIGHT,
@@ -108,12 +144,30 @@ class _LoginPageState extends State<LoginPage> {
               color: Constants.INACTIVE_COLOR_LIGHT
           ),
           decoration: InputDecoration(
-            labelText: 'Email',
-            labelStyle: TextStyle(
-              color: Constants.INACTIVE_COLOR_LIGHT,
-            ),
+              labelText: 'Enter email',
+              labelStyle: TextStyle(
+                color: Constants.INACTIVE_COLOR_LIGHT,
+              )
           ),
-          validator: (value) => value.isEmpty ? 'Email cannot be empty' : null,
+          validator: (value) {
+            List<String> allowedExtensions = ["imperial"];
+            String regexExtensions = "";
+            regexExtensions = regexExtensions + "(?:(${allowedExtensions.first})";
+            allowedExtensions.sublist(1).forEach((extension) {
+              regexExtensions = regexExtensions + "(?:($extension)";
+            });
+            RegExp emailValidator = new RegExp(
+              r"[\w\d\.]+@(?:imperial)(?:\.ac\.uk)",
+              caseSensitive: false,
+              multiLine: false,
+            );
+            if(value.isEmpty) {
+              return 'Email cannot be empty';
+            } else if (!emailValidator.hasMatch(value)) {
+              return 'Please enter an @imperial.ac.uk email address';
+            }
+            return null;
+          },
           onSaved: (value) => _email = value,
         ),
       ),
@@ -142,38 +196,57 @@ class _LoginPageState extends State<LoginPage> {
               color: Constants.INACTIVE_COLOR_LIGHT
           ),
           decoration: InputDecoration(
-            labelText: 'Password',
-            labelStyle: TextStyle(
-              color: Colors.white,
-            ),
+              labelText: 'Enter password',
+              labelStyle: TextStyle(
+                color: Constants.INACTIVE_COLOR_LIGHT,
+              )
           ),
           validator: (value) => value.isEmpty ? 'Password cannot be empty' : null,
           obscureText: true,
           onSaved: (value) => _password = value,
         ),
       ),
+      SizedBox(height: 30,),
+      Theme(
+        data: ThemeData(
+          primaryColor: Constants.INACTIVE_COLOR_LIGHT,
+          accentColor: Constants.INACTIVE_COLOR_LIGHT,
+          hintColor: Constants.HIGHLIGHT_COLOR,
+          cursorColor: Constants.INACTIVE_COLOR_LIGHT,
+          textSelectionColor: Constants.INACTIVE_COLOR_LIGHT,
+          inputDecorationTheme: InputDecorationTheme(
+            border: UnderlineInputBorder(
+                borderSide: BorderSide(color: Constants.INACTIVE_COLOR_LIGHT)
+            ),
+            focusedBorder: UnderlineInputBorder(
+                borderSide: BorderSide(color: Constants.INACTIVE_COLOR_LIGHT)
+            ),
+            enabledBorder: UnderlineInputBorder(
+                borderSide: BorderSide(color: Constants.INACTIVE_COLOR_LIGHT)
+            ),
+          ),
+        ),
+        child: TextFormField(
+          style: TextStyle(
+              color: Constants.INACTIVE_COLOR_LIGHT
+          ),
+          decoration: InputDecoration(
+              labelText: 'Confirm password',
+              labelStyle: TextStyle(
+                color: Constants.INACTIVE_COLOR_LIGHT,
+              )
+          ),
+          validator: (value) => value.isEmpty ? 'Please retype your password' : null,
+          obscureText: true,
+          onSaved: (value) => _confirmPassword = value,
+
+        ),
+      ),
     ];
   }
 
-  List<Widget> buildSubmitButtons() {
+  List<Widget> buildButtons() {
     return [
-      Row(
-        mainAxisAlignment: MainAxisAlignment.start,
-        children: <Widget>[
-          Center(
-            child: Padding(
-              padding: const EdgeInsets.fromLTRB(0, 0, 0, 0),
-              child: FlatButton(
-                child: Text(
-                  'Forgot Passsword?',
-                  style: Constants.TEXT_STYLE_HINT_LIGHT,
-                ),
-                onPressed: moveToForgotPassword,
-              ),
-            ),
-          ),
-        ],
-      ),
       Spacer(),
       SizedBox(
         height: 60.0,
@@ -198,7 +271,7 @@ class _LoginPageState extends State<LoginPage> {
                 constraints: BoxConstraints(maxWidth: 220.0, minHeight: 50.0),
                 alignment: Alignment.center,
                 child: Text(
-                  "Login",
+                  "Create Account",
                   textAlign: TextAlign.center,
                   style: TextStyle(
                       color: Colors.white
@@ -211,11 +284,13 @@ class _LoginPageState extends State<LoginPage> {
       ),
       FlatButton(
         child: Text(
-          'Create Account',
+          'Have an account? Login',
           style: Constants.TEXT_STYLE_HINT_DARK,
         ),
-        onPressed: moveToRegister,
-      ),
+        onPressed: () {
+          Navigator.pop(context); // page is pushed onto the navigation stack so it can be removed by simply popping it off the stack
+        },
+      )
     ];
   }
 }
