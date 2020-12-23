@@ -7,16 +7,20 @@ class ErrorPage extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Container(
-      child: Center(
-        child: Column(
-          children: <Widget>[
-            Text("Uh oh - an error occurred"),
-            RaisedButton(
-              child: Text("back to home"),
-              onPressed: toHomePage,
-            )
-          ],
+    return SafeArea(
+      child: Scaffold(
+        body: Container(
+          child: Center(
+            child: Column(
+              children: <Widget>[
+                Text("Uh oh - an error occurred"),
+                RaisedButton(
+                  child: Text("back to home"),
+                  onPressed: toHomePage,
+                )
+              ],
+            ),
+          ),
         ),
       ),
     );

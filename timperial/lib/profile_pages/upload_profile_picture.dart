@@ -7,9 +7,10 @@ import 'package:timperial/config.dart';
 import 'package:flutter_image_compress/flutter_image_compress.dart';
 
 class UploadProfilePicture extends StatefulWidget {
-  UploadProfilePicture({this.fromCamera = true});
+  UploadProfilePicture({this.reloadProfilePages, this.fromCamera = false});
 
   final BaseBackend backend = new Backend();
+  final VoidCallback reloadProfilePages;
   final bool fromCamera;
 
   @override
@@ -140,27 +141,30 @@ class _UploadProfilePictureState extends State<UploadProfilePicture> {
       );
     } else {
       return Center(
-          child: Column(
-            children: <Widget>[
-              ClipRRect(
-                child: Image.file(croppedImage),
-                borderRadius: BorderRadius.circular(1000),
-              ),
-              RaisedButton(
-                shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(5.0)
+          child: Padding(
+            padding: const EdgeInsets.all(16.0),
+            child: Column(
+              children: <Widget>[
+                Expanded(flex: 1, child: Text(""),),
+                ClipRRect(
+                  child: Image.file(croppedImage),
+                  borderRadius: BorderRadius.circular(20),
                 ),
-                elevation: 1,
-                color: Constants.SECONDARY_COLOR,
-                child: Text('Upload new profile picture'),
-                onPressed: () {
-                  resizeImage(croppedImage).then((resizedImage) {
-                    widget.backend.addProfilePage(resizedImage);
-                    Navigator.pop(context);
-                  });
-                },
-              )
-            ],
+                Expanded(flex: 2, child: Text(""),),
+                FlatButton(
+                  child: Text(
+                      'Done',
+                      style: Constants.FLAT_BUTTON_STYLE
+                  ),
+                  onPressed: () {
+                    resizeImage(croppedImage).then((resizedImage) {
+                      widget.backend.addProfilePage(resizedImage, widget.reloadProfilePages);
+                      Navigator.pop(context);
+                    });
+                  },
+                ),
+              ],
+            ),
           )
       );
     }

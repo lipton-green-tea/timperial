@@ -1,3 +1,4 @@
+import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:timperial/auth.dart';
@@ -5,13 +6,19 @@ import 'package:fluttertoast/fluttertoast.dart';
 import 'package:timperial/config.dart';
 
 class CreateAccountPage extends StatefulWidget {
-  CreateAccountPage({this.onSignedIn, this.auth});
+  CreateAccountPage({this.auth, this.toLoginPage});
 
-  final VoidCallback onSignedIn;
   final BaseAuth auth;
+  final VoidCallback toLoginPage;
 
   @override
   _CreateAccountPageState createState() => _CreateAccountPageState();
+}
+
+enum Page {
+  createAccount,
+  eula,
+  verify,
 }
 
 class _CreateAccountPageState extends State<CreateAccountPage> {
@@ -21,6 +28,7 @@ class _CreateAccountPageState extends State<CreateAccountPage> {
   String _email;
   String _password;
   String _confirmPassword;
+  Page _currentPage = Page.createAccount;
 
   void openPolicyDisclaimer() {
     showDialog(
@@ -80,8 +88,11 @@ class _CreateAccountPageState extends State<CreateAccountPage> {
         String userId = await widget.auth.createUserWithEmailAndPassword(_email, _password).catchError((e) => {
           Fluttertoast.showToast(msg: "account creation failed")
         });
-        widget.onSignedIn();
-        Navigator.pop(context);
+        setState(() {
+          _currentPage = Page.verify;
+        });
+        //widget.onSignedIn();
+        //Navigator.pop(context);
       } catch (e) {
         print('Error: $e');
       }
@@ -118,179 +129,273 @@ class _CreateAccountPageState extends State<CreateAccountPage> {
   }
 
   List<Widget> buildInputs() {
-    return [
-      SizedBox(height: 90,),
-      Theme(
-        data: ThemeData(
-          primaryColor: Constants.INACTIVE_COLOR_LIGHT,
-          accentColor: Constants.INACTIVE_COLOR_LIGHT,
-          hintColor: Constants.HIGHLIGHT_COLOR,
-          cursorColor: Constants.INACTIVE_COLOR_LIGHT,
-          textSelectionColor: Constants.INACTIVE_COLOR_LIGHT,
-          inputDecorationTheme: InputDecorationTheme(
-            border: UnderlineInputBorder(
-                borderSide: BorderSide(color: Constants.INACTIVE_COLOR_LIGHT)
+    if(_currentPage == Page.verify) {
+      return [
+        SizedBox(height: 150),
+        Text("You should have recieved a verification link in your email. Please verify your email and log in using the email and password you provided")
+      ];
+    } else if (_currentPage == Page.eula) {
+      return [
+        SizedBox(height: 90),
+        Text("Please read and accept the following terms and conditions to keep using the app"),
+        SizedBox(height: 16.0,),
+        Expanded(
+          flex: 8,
+          child: Container(
+            decoration: BoxDecoration(
+              color: Colors.white,
+              borderRadius: BorderRadius.all(Radius.circular(5.0)),
             ),
-            focusedBorder: UnderlineInputBorder(
-                borderSide: BorderSide(color: Constants.INACTIVE_COLOR_LIGHT)
+            child: SingleChildScrollView(
+              padding: EdgeInsets.all(16.0),
+              scrollDirection: Axis.vertical,
+              child: Text(Constants.EULA_AGREEMENT_TEXT),
             ),
-            enabledBorder: UnderlineInputBorder(
-                borderSide: BorderSide(color: Constants.INACTIVE_COLOR_LIGHT)
+          )
+        )
+      ];
+    } else {
+      return [
+        SizedBox(height: 150,),
+        // First input
+        Theme(
+          data: ThemeData(
+            primaryColor: Constants.INACTIVE_COLOR_LIGHT,
+            accentColor: Constants.INACTIVE_COLOR_LIGHT,
+            hintColor: Constants.HIGHLIGHT_COLOR,
+            cursorColor: Constants.INACTIVE_COLOR_LIGHT,
+            textSelectionColor: Constants.INACTIVE_COLOR_LIGHT,
+            inputDecorationTheme: InputDecorationTheme(
+              border: UnderlineInputBorder(
+                  borderSide: BorderSide(color: Constants.INACTIVE_COLOR_LIGHT)
+              ),
+              focusedBorder: UnderlineInputBorder(
+                  borderSide: BorderSide(color: Constants.INACTIVE_COLOR_LIGHT)
+              ),
+              enabledBorder: UnderlineInputBorder(
+                  borderSide: BorderSide(color: Constants.INACTIVE_COLOR_LIGHT)
+              ),
             ),
+          ),
+          child: TextFormField(
+            style: TextStyle(
+                color: Constants.INACTIVE_COLOR_LIGHT
+            ),
+            decoration: InputDecoration(
+                labelText: 'Enter email',
+                labelStyle: TextStyle(
+                  color: Constants.INACTIVE_COLOR_LIGHT,
+                )
+            ),
+            validator: (value) {
+              print("running validator");
+              List<String> allowedExtensions = ["imperial"];
+              String regexExtensions = "";
+              regexExtensions = regexExtensions + "(?:(${allowedExtensions.first})";
+              allowedExtensions.sublist(1).forEach((extension) {
+                regexExtensions = regexExtensions + "(?:($extension)";
+              });
+              RegExp emailValidator = new RegExp(
+                r"[\w\d\.]+@(?:imperial)(?:\.ac\.uk)",
+                caseSensitive: false,
+                multiLine: false,
+              );
+              if(value.isEmpty) {
+                return 'Email cannot be empty';
+              } else if (!emailValidator.hasMatch(value)) {
+                return 'Please enter an @imperial.ac.uk email address';
+              }
+              return null;
+            },
+            onSaved: (value) => _email = value,
           ),
         ),
-        child: TextFormField(
-          style: TextStyle(
-              color: Constants.INACTIVE_COLOR_LIGHT
+        SizedBox(height: 30,),
+        // Second input
+        Theme(
+          data: ThemeData(
+            primaryColor: Constants.INACTIVE_COLOR_LIGHT,
+            accentColor: Constants.INACTIVE_COLOR_LIGHT,
+            hintColor: Constants.HIGHLIGHT_COLOR,
+            cursorColor: Constants.INACTIVE_COLOR_LIGHT,
+            textSelectionColor: Constants.INACTIVE_COLOR_LIGHT,
+            inputDecorationTheme: InputDecorationTheme(
+              border: UnderlineInputBorder(
+                  borderSide: BorderSide(color: Constants.INACTIVE_COLOR_LIGHT)
+              ),
+              focusedBorder: UnderlineInputBorder(
+                  borderSide: BorderSide(color: Constants.INACTIVE_COLOR_LIGHT)
+              ),
+              enabledBorder: UnderlineInputBorder(
+                  borderSide: BorderSide(color: Constants.INACTIVE_COLOR_LIGHT)
+              ),
+            ),
           ),
-          decoration: InputDecoration(
-              labelText: 'Enter email',
-              labelStyle: TextStyle(
-                color: Constants.INACTIVE_COLOR_LIGHT,
-              )
-          ),
-          validator: (value) {
-            List<String> allowedExtensions = ["imperial"];
-            String regexExtensions = "";
-            regexExtensions = regexExtensions + "(?:(${allowedExtensions.first})";
-            allowedExtensions.sublist(1).forEach((extension) {
-              regexExtensions = regexExtensions + "(?:($extension)";
-            });
-            RegExp emailValidator = new RegExp(
-              r"[\w\d\.]+@(?:imperial)(?:\.ac\.uk)",
-              caseSensitive: false,
-              multiLine: false,
-            );
-            if(value.isEmpty) {
-              return 'Email cannot be empty';
-            } else if (!emailValidator.hasMatch(value)) {
-              return 'Please enter an @imperial.ac.uk email address';
-            }
-            return null;
-          },
-          onSaved: (value) => _email = value,
-        ),
-      ),
-      SizedBox(height: 30,),
-      Theme(
-        data: ThemeData(
-          primaryColor: Constants.INACTIVE_COLOR_LIGHT,
-          accentColor: Constants.INACTIVE_COLOR_LIGHT,
-          hintColor: Constants.HIGHLIGHT_COLOR,
-          cursorColor: Constants.INACTIVE_COLOR_LIGHT,
-          textSelectionColor: Constants.INACTIVE_COLOR_LIGHT,
-          inputDecorationTheme: InputDecorationTheme(
-            border: UnderlineInputBorder(
-                borderSide: BorderSide(color: Constants.INACTIVE_COLOR_LIGHT)
+          child: TextFormField(
+            style: TextStyle(
+                color: Constants.INACTIVE_COLOR_LIGHT
             ),
-            focusedBorder: UnderlineInputBorder(
-                borderSide: BorderSide(color: Constants.INACTIVE_COLOR_LIGHT)
+            decoration: InputDecoration(
+                labelText: 'Enter password',
+                labelStyle: TextStyle(
+                  color: Constants.INACTIVE_COLOR_LIGHT,
+                )
             ),
-            enabledBorder: UnderlineInputBorder(
-                borderSide: BorderSide(color: Constants.INACTIVE_COLOR_LIGHT)
-            ),
+            validator: (value) => value.isEmpty ? 'Password cannot be empty' : null,
+            obscureText: true,
+            onSaved: (value) => _password = value,
           ),
         ),
-        child: TextFormField(
-          style: TextStyle(
-              color: Constants.INACTIVE_COLOR_LIGHT
-          ),
-          decoration: InputDecoration(
-              labelText: 'Enter password',
-              labelStyle: TextStyle(
-                color: Constants.INACTIVE_COLOR_LIGHT,
-              )
-          ),
-          validator: (value) => value.isEmpty ? 'Password cannot be empty' : null,
-          obscureText: true,
-          onSaved: (value) => _password = value,
-        ),
-      ),
-      SizedBox(height: 30,),
-      Theme(
-        data: ThemeData(
-          primaryColor: Constants.INACTIVE_COLOR_LIGHT,
-          accentColor: Constants.INACTIVE_COLOR_LIGHT,
-          hintColor: Constants.HIGHLIGHT_COLOR,
-          cursorColor: Constants.INACTIVE_COLOR_LIGHT,
-          textSelectionColor: Constants.INACTIVE_COLOR_LIGHT,
-          inputDecorationTheme: InputDecorationTheme(
-            border: UnderlineInputBorder(
-                borderSide: BorderSide(color: Constants.INACTIVE_COLOR_LIGHT)
-            ),
-            focusedBorder: UnderlineInputBorder(
-                borderSide: BorderSide(color: Constants.INACTIVE_COLOR_LIGHT)
-            ),
-            enabledBorder: UnderlineInputBorder(
-                borderSide: BorderSide(color: Constants.INACTIVE_COLOR_LIGHT)
-            ),
-          ),
-        ),
-        child: TextFormField(
-          style: TextStyle(
-              color: Constants.INACTIVE_COLOR_LIGHT
-          ),
-          decoration: InputDecoration(
-              labelText: 'Confirm password',
-              labelStyle: TextStyle(
-                color: Constants.INACTIVE_COLOR_LIGHT,
-              )
-          ),
-          validator: (value) => value.isEmpty ? 'Please retype your password' : null,
-          obscureText: true,
-          onSaved: (value) => _confirmPassword = value,
-
-        ),
-      ),
-    ];
+        //SizedBox(height: 30,),
+      ];
+    }
   }
 
   List<Widget> buildButtons() {
-    return [
-      Spacer(),
-      SizedBox(
-        height: 60.0,
-        width: 220,
-        child: ButtonTheme(
-          buttonColor: Constants.BACKGROUND_COLOR,
-          minWidth: 220,
-          child: RaisedButton(
-            elevation: 0,
-            onPressed: validateAndSubmit,
-            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(80.0)),
-            padding: EdgeInsets.all(0.0),
-            child: Ink(
-              decoration: BoxDecoration(
-                  gradient: LinearGradient(colors: [Color(0xff4EB9E8), Color(0xff6B95DE)],
-                    begin: Alignment.centerLeft,
-                    end: Alignment.centerRight,
-                  ),
-                  borderRadius: BorderRadius.circular(30.0)
-              ),
-              child: Container(
-                constraints: BoxConstraints(maxWidth: 220.0, minHeight: 50.0),
-                alignment: Alignment.center,
-                child: Text(
-                  "Create Account",
-                  textAlign: TextAlign.center,
-                  style: TextStyle(
-                      color: Colors.white
+    if (_currentPage == Page.verify) {
+      return [
+        Spacer(),
+        SizedBox(
+          height: 60.0,
+          width: 220,
+          child: ButtonTheme(
+            buttonColor: Constants.BACKGROUND_COLOR,
+            minWidth: 220,
+            child: RaisedButton(
+              elevation: 0,
+              onPressed: widget.toLoginPage,
+              shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(80.0)),
+              padding: EdgeInsets.all(0.0),
+              child: Ink(
+                decoration: BoxDecoration(
+                    gradient: LinearGradient(
+                      colors: [Color(0xff4EB9E8), Color(0xff6B95DE)],
+                      begin: Alignment.centerLeft,
+                      end: Alignment.centerRight,
+                    ),
+                    borderRadius: BorderRadius.circular(30.0)
+                ),
+                child: Container(
+                  constraints: BoxConstraints(maxWidth: 220.0, minHeight: 50.0),
+                  alignment: Alignment.center,
+                  child: Text(
+                    "Back To Login",
+                    textAlign: TextAlign.center,
+                    style: TextStyle(
+                        color: Colors.white
+                    ),
                   ),
                 ),
               ),
             ),
           ),
         ),
-      ),
-      FlatButton(
-        child: Text(
-          'Have an account? Login',
-          style: Constants.TEXT_STYLE_HINT_DARK,
+      ];
+    } else if (_currentPage == Page.eula) {
+      return [
+        Spacer(),
+        SizedBox(
+          height: 60.0,
+          width: 220,
+          child: ButtonTheme(
+            buttonColor: Constants.BACKGROUND_COLOR,
+            minWidth: 220,
+            child: RaisedButton(
+              elevation: 0,
+              onPressed: validateAndSubmit,
+              shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(80.0)),
+              padding: EdgeInsets.all(0.0),
+              child: Ink(
+                decoration: BoxDecoration(
+                    gradient: LinearGradient(
+                      colors: [Color(0xff4EB9E8), Color(0xff6B95DE)],
+                      begin: Alignment.centerLeft,
+                      end: Alignment.centerRight,
+                    ),
+                    borderRadius: BorderRadius.circular(30.0)
+                ),
+                child: Container(
+                  constraints: BoxConstraints(maxWidth: 220.0, minHeight: 50.0),
+                  alignment: Alignment.center,
+                  child: Text(
+                    "Agree",
+                    textAlign: TextAlign.center,
+                    style: TextStyle(
+                        color: Colors.white
+                    ),
+                  ),
+                ),
+              ),
+            ),
+          ),
         ),
-        onPressed: () {
-          Navigator.pop(context); // page is pushed onto the navigation stack so it can be removed by simply popping it off the stack
-        },
-      )
-    ];
+        FlatButton(
+          child: Text(
+            'Disagree',
+            style: Constants.TEXT_STYLE_HINT_DARK,
+          ),
+          onPressed: () {
+            setState(() {
+              _currentPage = Page.createAccount;
+            });
+          },
+        )
+      ];
+    } else {
+      return [
+        Spacer(),
+        SizedBox(
+          height: 60.0,
+          width: 220,
+          child: ButtonTheme(
+            buttonColor: Constants.BACKGROUND_COLOR,
+            minWidth: 220,
+            child: RaisedButton(
+              elevation: 0,
+              onPressed: () {
+                if(validateAndSave()) {
+                  setState(() {
+                    _currentPage = Page.eula;
+                  });
+                }
+              },
+              shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(80.0)),
+              padding: EdgeInsets.all(0.0),
+              child: Ink(
+                decoration: BoxDecoration(
+                    gradient: LinearGradient(
+                      colors: [Color(0xff4EB9E8), Color(0xff6B95DE)],
+                      begin: Alignment.centerLeft,
+                      end: Alignment.centerRight,
+                    ),
+                    borderRadius: BorderRadius.circular(30.0)
+                ),
+                child: Container(
+                  constraints: BoxConstraints(maxWidth: 220.0, minHeight: 50.0),
+                  alignment: Alignment.center,
+                  child: Text(
+                    "Create Account",
+                    textAlign: TextAlign.center,
+                    style: TextStyle(
+                        color: Colors.white
+                    ),
+                  ),
+                ),
+              ),
+            ),
+          ),
+        ),
+        FlatButton(
+          child: Text(
+            'Have an account? Login',
+            style: Constants.TEXT_STYLE_HINT_DARK,
+          ),
+          onPressed: widget.toLoginPage,
+        )
+      ];
+    }
   }
 }

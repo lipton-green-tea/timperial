@@ -1,10 +1,13 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:http/http.dart';
 import 'profile_card_alignment.dart';
 import 'dart:math';
 import 'package:timperial/backend.dart';
 import 'package:timperial/config.dart';
+import 'package:timperial/auth.dart';
+import 'package:timperial/auth.dart';
 
 List<Alignment> cardsAlign = [
   Alignment(0.0, 0.0),
@@ -17,7 +20,7 @@ List<Alignment> cardsAlign = [
 List<Size> cardsSize = List(3);
 
 class CardsSectionAlignment extends StatefulWidget {
-  CardsSectionAlignment(BuildContext context) {
+  CardsSectionAlignment(BuildContext context, BaseAuth _auth) {
     cardsSize[0] = Size(MediaQuery.of(context).size.width * 0.90,
         MediaQuery.of(context).size.width + 82);
     cardsSize[1] = Size(MediaQuery.of(context).size.width * 0.85,
@@ -41,6 +44,9 @@ class _CardsSectionState extends State<CardsSectionAlignment>
   AnimationController _swipeController;
   AnimationController _flipController;
   BaseBackend backend = new Backend();
+  BaseAuth auth = new Auth();
+  String userID = "";
+  DocumentSnapshot userDocument;
 
   final Alignment defaultFrontCardAlign = Alignment(0.0, 0.0);
   Alignment frontCardAlign;
@@ -52,19 +58,30 @@ class _CardsSectionState extends State<CardsSectionAlignment>
 
     BaseBackend backend = new Backend();
 
-    addCards(4); // add initial 10 cards
+    auth.currentUserObject().then((user) {
+      userID = user.uid;
+    });
 
-    frontCardAlign = cardsAlign[2];
+    backend.getOwnUser().then((user) {
+      setState(() {
+        userDocument = user;
+      });
+      if(profileComplete(user)) {
+        addCards(4); // add initial 4 cards
 
-    // Init the animation controller
-    _swipeController =
-        AnimationController(
-            duration: Duration(milliseconds: Constants.SWIPE_ANIMATION_DURATION), vsync: this);
-    _swipeController.addListener(() => setState(() {}));
-    _swipeController.addStatusListener((
-        AnimationStatus status) { // calls when the animation is done
-      if (status == AnimationStatus
-          .completed) changeCardsOrder(); // TODO: add the refreshing of new content here
+        frontCardAlign = cardsAlign[2];
+
+        // Init the animation controller
+        _swipeController =
+            AnimationController(
+                duration: Duration(milliseconds: Constants.SWIPE_ANIMATION_DURATION), vsync: this);
+        _swipeController.addListener(() => setState(() {}));
+        _swipeController.addStatusListener((
+            AnimationStatus status) { // calls when the animation is done
+          if (status == AnimationStatus
+              .completed) changeCardsOrder(); // TODO: add the refreshing of new content here
+        });
+      }
     });
   }
 
@@ -85,7 +102,19 @@ class _CardsSectionState extends State<CardsSectionAlignment>
 
   @override
   Widget build(BuildContext context) {
-    if(cards.length >= 3) {
+    if(userDocument == null) {
+      return Expanded(
+        child: Center(
+          child: CircularProgressIndicator(backgroundColor: Constants.HIGHLIGHT_COLOR,),
+        ),
+      );
+    } else if (!profileComplete(userDocument)) {
+      return Expanded(
+        child: Center(
+          child: Text("Complete your profile to unlock swiping"),
+        ),
+      );
+    } else if(cards.length >= 3) {
       return Expanded(
           child: Stack(
             children: <Widget>[
@@ -126,8 +155,7 @@ class _CardsSectionState extends State<CardsSectionAlignment>
                     // When releasing the first card
                     onPanEnd: (_) {
                       // If the front card was swiped far enough to count as swiped
-                      if (frontCardAlign.x > 3.0 || frontCardAlign.x < -3.0 ||
-                          frontCardAlign.y > 3.0 || frontCardAlign.y < -3.0) {
+                      if (frontCardAlign.x > 3.0 || frontCardAlign.x < -3.0) {
                         addInteraction(context);
                         animateCards();
                       } else {
@@ -151,18 +179,28 @@ class _CardsSectionState extends State<CardsSectionAlignment>
     }
   }
 
+  bool profileComplete(DocumentSnapshot user) {
+    return (
+      user.data["name"] != "" &&
+      user.data["gender"] != "" &&
+      user.data["snapchat"] != ""
+    );
+  }
+
   void addInteraction(context) {
     Alignment beginAlign = frontCardAlign;
     String currentPostID = cards[0].profile.documentID;
-    if (beginAlign.y > 0 && beginAlign.x < 3.0 && beginAlign.x > -3.0) {
-      backend.addSaveAndLike(currentPostID);
-    } else if (beginAlign.y < 0 && beginAlign.x < 3.0 && beginAlign.x > -3.0) {
-      print("share file");
-      //shareImage();
-    } else if (beginAlign.x > 0) {
-      backend.addLike(currentPostID);
+    List<dynamic> currentCardRightSwipes = cards[0].profile.data["right_swipes"];
+    if (beginAlign.x > 0) {
+      if(currentCardRightSwipes.contains(userID)) {
+        print("adding match");
+        backend.addMatch(cards[0].profile);
+      } else {
+        print("adding right swipe");
+        backend.addRightSwipe(cards[0].profile.documentID);
+      }
     } else if (beginAlign.x < 0) {
-      backend.addDislike(currentPostID);
+      backend.addLeftSwipe(cards[0].profile.documentID);
     }
   }
 

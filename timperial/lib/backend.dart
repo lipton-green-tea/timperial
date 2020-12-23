@@ -4,11 +4,13 @@ import 'dart:convert';
 import 'dart:math';
 
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:flutter/cupertino.dart';
 import 'package:timperial/auth.dart';
 import 'package:firebase_storage/firebase_storage.dart';
 import 'package:path/path.dart';
 import 'package:timperial/config.dart';
 import 'package:http/http.dart' as http;
+import 'package:timperial/root_page.dart';
 
 abstract class BaseBackend {
   Future<DocumentSnapshot> getSingleImageURL();
@@ -64,15 +66,22 @@ abstract class BaseBackend {
   void updateUserToken(String token);
   void removePost(String postID);
 
-  void updateBio(String bioText);
+  void updateProfileInfo(String bioText, String name, String snapchat, String gender, String preference);
+  void addToStacks(String gender, String preference);
   void updateProfilePages(List<Map> profilePages);
-  void addProfilePage(File image);
+  void addProfilePage(File image, [VoidCallback reloadProfilePage]);
+  void addSwipe(String matchID);
+  void addRightSwipe(String matchID);
+  void addLeftSwipe(String matchID);
+  void addMatch(DocumentSnapshot matchDocument);
 }
 
 class Backend implements BaseBackend {
   final _firestore = Firestore.instance;
   final _firebaseStorage = FirebaseStorage.instance;
   final _auth = Auth();
+  String ownUserID;
+  DocumentSnapshot ownUserDocument;
 
   // debug level is similar to verbosity
   // change to 0 to print nothing to the console
@@ -1023,15 +1032,87 @@ class Backend implements BaseBackend {
     return _firestore.collection('users').document(userID).get();
   }
 
-  void updateBio(String bioText) {
+  void updateProfileInfo(String bioText, String name, String snapchat, String gender, String preference) {
     if(debugLevel >= 1) {
       print("[FUNCTION INVOKED] Backend.updateBio");
-      print("[FUNCTION ARGS][Backend.updateBio] bioText: $bioText");
+      print("[FUNCTION ARGS][Backend.updateBio] bioText: $bioText, name: $name, snapchat: $snapchat, gender: $gender, preference: $preference");
     }
 
     getOwnUserID().then((uid) {
-      _firestore.collection('users').document(uid).updateData({'bio': bioText});
+      _firestore.collection('users').document(uid).updateData({
+        'name':name,
+        'snapchat':snapchat,
+        'bio': bioText,
+        'gender':gender,
+        'preference':preference
+      });
     });
+  }
+
+  void addToStacks(String gender, String preference) async {
+    if(ownUserID == null) {
+      ownUserID = await getOwnUserID();
+    }
+
+    if(gender == "male") {
+      if(preference == "looking for men") {
+        // gay dudes
+        _firestore.collection('online_variables').document('user_ids').updateData({
+          "homosexual_male_ids" : FieldValue.arrayUnion([ownUserID])
+        });
+      } else if (preference == "looking for women") {
+        // straight dudes
+        _firestore.collection('online_variables').document('user_ids').updateData({
+          "hetrosexual_male_ids" : FieldValue.arrayUnion([ownUserID])
+        });
+      } else { // preference == "looking for both"
+        // bi dudes
+        _firestore.collection('online_variables').document('user_ids').updateData({
+          "homosexual_male_ids" : FieldValue.arrayUnion([ownUserID]),
+          "hetrosexual_male_ids" : FieldValue.arrayUnion([ownUserID])
+        });
+      }
+    } else if (gender == "female") {
+      if(preference == "looking for men") {
+        // straight gals
+        _firestore.collection('online_variables').document('user_ids').updateData({
+          "hetrosexual_female_ids" : FieldValue.arrayUnion([ownUserID])
+        });
+      } else if (preference == "looking for women") {
+        // lesbian gals
+        _firestore.collection('online_variables').document('user_ids').updateData({
+          "homosexual_female_ids" : FieldValue.arrayUnion([ownUserID])
+        });
+      } else { // preference == "looking for both"
+        // bi gals
+        _firestore.collection('online_variables').document('user_ids').updateData({
+          "hetrosexual_female_ids" : FieldValue.arrayUnion([ownUserID]),
+          "homosexual_female_ids" : FieldValue.arrayUnion([ownUserID])
+        });
+      }
+    } else {
+      if(preference == "looking for men") {
+        // straight gals and gay dudes
+        _firestore.collection('online_variables').document('user_ids').updateData({
+          "hetrosexual_female_ids" : FieldValue.arrayUnion([ownUserID]),
+          "homosexual_male_ids" : FieldValue.arrayUnion([ownUserID])
+        });
+      } else if (preference == "looking for women") {
+        // straight dudes and lesbian gals
+        _firestore.collection('online_variables').document('user_ids').updateData({
+          "hetrosexual_male_ids" : FieldValue.arrayUnion([ownUserID]),
+          "homosexual_female_ids" : FieldValue.arrayUnion([ownUserID])
+        });
+      } else { // preference == "looking for both"
+        // straight dudes, gay dudes, straight gals and lesbian gals
+        _firestore.collection('online_variables').document('user_ids').updateData({
+          "hetrosexual_male_ids" : FieldValue.arrayUnion([ownUserID]),
+          "homosexual_male_ids" : FieldValue.arrayUnion([ownUserID]),
+          "hetrosexual_female_ids" : FieldValue.arrayUnion([ownUserID]),
+          "homosexual_female_ids" : FieldValue.arrayUnion([ownUserID])
+        });
+      }
+    }
   }
 
   void updateProfilePages(List<Map> profilePages) {
@@ -1045,15 +1126,18 @@ class Backend implements BaseBackend {
     });
   }
 
-  void addProfilePage(File image) async {
+  void addProfilePage(File image,  [VoidCallback reloadProfilePage]) async {
     if(debugLevel >= 1) {
       print("[FUNCTION INVOKED] Backend.addProfilePage");
       print("[FUNCTION ARGS][Backend.addProfilePage] image: ${image.toString()}");
     }
 
-    String userID = await getOwnUserID();
-    DocumentSnapshot user = await _firestore.collection('users').document(userID).get();
-    StorageReference storageReference = _firebaseStorage.ref().child('user/images/$userID/${basename(image.path)}');
+    if(ownUserID == null) {
+      ownUserID = await getOwnUserID();
+    }
+    
+    DocumentSnapshot user = await _firestore.collection('users').document(ownUserID).get();
+    StorageReference storageReference = _firebaseStorage.ref().child('user/images/$ownUserID/${basename(image.path)}');
     StorageUploadTask uploadTask = storageReference.putFile(image);
     await uploadTask.onComplete;
     String imageURL = await storageReference.getDownloadURL();
@@ -1062,15 +1146,103 @@ class Backend implements BaseBackend {
     if(debugLevel >= 2) {
       print("[FUNCTION VARS][Backend.addProfilePage] newProfilePageList: ${newProfilePageList.toString()}");
     }
-    _firestore.collection('users').document(userID).updateData({"profile_pages": newProfilePageList}); // TODO: add addOnSuccessListener and addOnFailureListener
+    await _firestore.collection('users').document(ownUserID).updateData({"profile_pages": newProfilePageList});
+    if(reloadProfilePage != null) {
+      reloadProfilePage();
+    }
   }
 
   Future<QuerySnapshot> getMatches() async {
     if(debugLevel >= 1) {
       print("[FUNCTION INVOKED] Backend.getMatches");
     }
+    
+    if(ownUserID == null) {
+      ownUserID = await getOwnUserID();
+    }
+    
+    return _firestore.collection('matches').where('users', arrayContains: ownUserID).getDocuments();
+  }
 
-    String userID = await getOwnUserID();
-    return _firestore.collection('matches').where('users', arrayContains: userID).getDocuments();
+  void addSwipe(String matchID) async {
+    if(debugLevel >= 1) {
+      print("[FUNCTION INVOKED] Backend.addSwipe");
+      print("[FUNCTION ARGS][Backend.addSwipe] matchID: $matchID");
+    }
+
+    if(ownUserID == null) {
+      ownUserID = await getOwnUserID();
+    }
+
+    _firestore.collection('users').document(ownUserID).updateData({"swipes" : FieldValue.arrayUnion([matchID])});
+  }
+
+  void addRightSwipe(String matchID) async {
+    if(debugLevel >= 1) {
+      print("[FUNCTION INVOKED] Backend.addRightSwipe");
+      print("[FUNCTION ARGS][Backend.addRightSwipe] matchID: $matchID");
+    }
+
+    if(ownUserID == null) {
+      ownUserID = await getOwnUserID();
+    }
+    
+    _firestore.collection('users').document(ownUserID).updateData({"right_swipes" : FieldValue.arrayUnion([matchID])});
+    addSwipe(matchID);
+  }
+
+  void addLeftSwipe(String matchID) async {
+    if(debugLevel >= 1) {
+      print("[FUNCTION INVOKED] Backend.addLeftSwipe");
+      print("[FUNCTION ARGS][Backend.addLeftSwipe] matchID: $matchID");
+    }
+
+    if(ownUserID == null) {
+      ownUserID = await getOwnUserID();
+    }
+
+    _firestore.collection('users').document(ownUserID).updateData({"left_swipes" : FieldValue.arrayUnion([matchID])});
+    addSwipe(matchID);
+  }
+  
+  void addMatch(DocumentSnapshot matchDocument) async {
+    if(debugLevel >= 1) {
+      print("[FUNCTION INVOKED] Backend.addMatch");
+      print("[FUNCTION ARGS][Backend.addMatch] matchDocument.documentID: ${matchDocument.documentID}");
+    }
+
+    if(ownUserID == null) {
+      ownUserID = await getOwnUserID();
+    }
+
+    DocumentSnapshot userDocument = await _firestore.collection('users').document(ownUserID).get();
+    String userName = userDocument.data["name"];
+    String userSnapchat = userDocument.data["snapchat"];
+    String userPictureURL = Constants.DEFAULT_PROFILE_PICTURE_LOCATION;
+    if(userDocument.data["profile_pages"].length != 0) {
+      userPictureURL = userDocument.data["profile_pages"][0]["image_url"];
+    }
+
+    String matchID = matchDocument.documentID;
+    String matchName = matchDocument.data["name"];
+    String matchSnapchat = matchDocument.data["snapchat"];
+    String matchPictureURL = Constants.DEFAULT_PROFILE_PICTURE_LOCATION;
+    if(matchDocument.data["profile_pages"].length != 0) {
+      matchPictureURL = matchDocument.data["profile_pages"][0]["image_url"];
+    }
+
+    _firestore.collection('matches').add({
+      "users":[ownUserID, matchID],
+      ownUserID: {
+        "name":userName,
+        "snapchat":userSnapchat,
+        "picture_url":userPictureURL
+      },
+      matchID: {
+        "name":matchName,
+        "snapchat":matchSnapchat,
+        "picture_url":matchPictureURL
+      }
+    });
   }
 }

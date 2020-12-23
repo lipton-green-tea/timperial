@@ -66,9 +66,30 @@ class _MatchPageState extends State<MatchPage> {
       print(document.data["users"]);
       String matchID = document.data["users"].firstWhere((id) => id != userID);
       String matchName = document.data[matchID]["name"];
+      String matchSnapchat = document.data[matchID]["snapchat"];
+      String matchImageURL = document.data[matchID]["picture_url"];
       matchCards.add(
         Card(
-          child: Text(matchName),
+          child: Row(
+            children: <Widget>[
+              Padding(
+                padding: const EdgeInsets.all(8.0),
+                child: Image.network(
+                  matchImageURL,
+                  height: 80,
+                ),
+              ),
+              Padding(
+                padding: const EdgeInsets.all(8.0),
+                child: Column(
+                  children: <Widget>[
+                    Text(matchName),
+                    Text(matchSnapchat)
+                  ],
+                ),
+              )
+            ],
+          ),
         )
       );
     });
@@ -84,7 +105,7 @@ class _MatchPageState extends State<MatchPage> {
         children: <Widget>[
           Spacer(),
           IconButton(
-            icon: Icon(Constants.EXPLORE_PAGE_UNSELECTED_ICON, size: 27.5,),
+            icon: Icon(Constants.EXPLORE_PAGE_SELECTED_ICON, color: Constants.SELECTED_ICON_COLOR, size: 32.0,),
             color: Constants.INACTIVE_COLOR_DARK,
             onPressed: () {
               print("match page pressed");
@@ -92,7 +113,7 @@ class _MatchPageState extends State<MatchPage> {
           ),
           Spacer(),
           IconButton(
-            icon: Icon(Constants.SWIPE_PAGE_SELECTED_ICON, size: 32.0),
+            icon: Icon(Constants.SWIPE_PAGE_UNSELECTED_ICON, color: Constants.UNSELECTED_ICON_COLOR, size: 27.5),
             onPressed: () {
               print("go to swipe page button pressed");
               widget.toSwipePage();
@@ -100,7 +121,7 @@ class _MatchPageState extends State<MatchPage> {
           ),
           Spacer(),
           IconButton(
-              icon: Icon(Constants.PROFILE_PAGE_UNSELECTED_ICON, size: 27.5),
+              icon: Icon(Constants.PROFILE_PAGE_UNSELECTED_ICON, color: Constants.UNSELECTED_ICON_COLOR, size: 27.5),
               onPressed: () {
                 print("go to profile page button pressed");
                 widget.toProfilePage();

@@ -5,10 +5,12 @@ import 'package:timperial/auth.dart';
 import 'package:timperial/config.dart';
 
 class LoginPage extends StatefulWidget {
-  LoginPage({this.auth, this.onSignedIn});
+  LoginPage({this.auth, this.onSignedIn, this.toUnverifiedPage, this.toCreateAccountPage});
 
   BaseAuth auth;
   final VoidCallback onSignedIn;
+  final VoidCallback toUnverifiedPage;
+  final VoidCallback toCreateAccountPage;
 
   @override
   _LoginPageState createState() => _LoginPageState();
@@ -34,8 +36,12 @@ class _LoginPageState extends State<LoginPage> {
     final FirebaseAuth _firebaseAuth = FirebaseAuth.instance;
     if(validateAndSave()) {
       try {
-        String userId = await widget.auth.signInWithEmailAndPassword(_email, _password);
-        widget.onSignedIn();
+        FirebaseUser user = await widget.auth.signInWithEmailAndPassword(_email, _password);
+        if(user.isEmailVerified) {
+          widget.onSignedIn();
+        } else {
+          widget.toUnverifiedPage();
+        }
       } catch (e) {
         print('Error: $e');
       }
@@ -214,7 +220,7 @@ class _LoginPageState extends State<LoginPage> {
           'Create Account',
           style: Constants.TEXT_STYLE_HINT_DARK,
         ),
-        onPressed: moveToRegister,
+        onPressed: widget.toCreateAccountPage,
       ),
     ];
   }

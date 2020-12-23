@@ -11,7 +11,14 @@ class Constants {
   static Color INACTIVE_COLOR_LIGHT = Colors.white;
   static Color DARK_TEXT = Colors.black;
   static Color LIGHT_TEXT = Colors.white;
-  static Color GREY_TEXT = Colors.grey[500];
+  static Color GREY_TEXT = Colors.grey[700];
+  static Color BLUE_TEXT = Colors.blue[900];
+  static Color ERROR_TEXT = Colors.red;
+  static Color IMPERIAL_LIGHT_BLUE = Color(0xff006eaf);
+  static Color IMPERIAL_MEDIUM_BLUE = Color(0xff003e74);
+  static Color IMPERIAL_DARK_BLUE = Color(0xff002147);
+  static Color UNSELECTED_ICON_COLOR = Colors.black;
+  static Color SELECTED_ICON_COLOR = Color(0xff9f004e);
 
   static int MAX_IMAGE_SIZE = 7 * 1024 * 1024;
   static int SWIPE_ANIMATION_DURATION = 200; // length of full swipe animation in milliseconds
@@ -45,14 +52,17 @@ class Constants {
   static TextStyle TEXT_STYLE_CAPTION_DARK = GoogleFonts.getFont('Open Sans', color: DARK_TEXT, fontSize: 16.0);
   static TextStyle TEXT_STYLE_CAPTION_LIGHT = GoogleFonts.getFont('Open Sans', color: LIGHT_TEXT, fontSize: 16.0);
   static TextStyle TEXT_STYLE_CAPTION_GREY = GoogleFonts.getFont('Open Sans', color: GREY_TEXT, fontSize: 16.0);
+  static TextStyle TEXT_STYLE_BIO = GoogleFonts.getFont('Open Sans', color: BLUE_TEXT, fontSize: 24.0, fontWeight: FontWeight.w300);
   static TextStyle TEXT_STYLE_DARK = GoogleFonts.getFont('Open Sans', color: DARK_TEXT, fontWeight: FontWeight.w300);
   static TextStyle TEXT_STYLE_LIGHT = GoogleFonts.getFont('Open Sans', color: LIGHT_TEXT, fontWeight: FontWeight.w300);
   static TextStyle TEXT_STYLE_HINT_BLACK = GoogleFonts.getFont('Open Sans', color: DARK_TEXT, fontSize: 12.0);
-  static TextStyle TEXT_STYLE_HINT_DARK = GoogleFonts.getFont('Open Sans', color: GREY_TEXT, fontSize: 12.0);
-  static TextStyle TEXT_STYLE_HINT_LIGHT = GoogleFonts.getFont('Open Sans', color: LIGHT_TEXT, fontSize: 12.0);
+  static TextStyle TEXT_STYLE_HINT_DARK = GoogleFonts.getFont('Open Sans', color: GREY_TEXT, fontSize: 14.0);
+  static TextStyle TEXT_STYLE_HINT_LIGHT = GoogleFonts.getFont('Open Sans', color: LIGHT_TEXT, fontSize: 14.0);
+  static TextStyle TEXT_STYLE_ERROR = GoogleFonts.getFont('Open Sans', color: ERROR_TEXT, fontSize: 12.0);
   static TextStyle TEXT_STYLE_LARGE_NUMBERS_DARK = GoogleFonts.getFont('Open Sans', color: DARK_TEXT, fontSize: 18.0, fontWeight:  FontWeight.w500);
   static TextStyle ACTION_SHEET_TITLE = GoogleFonts.getFont('Roboto', color: DARK_TEXT, fontSize: 15.0, fontWeight:  FontWeight.w900);
   static TextStyle ACTION_SHEET_TEXT = GoogleFonts.getFont('Roboto', color: DARK_TEXT, fontSize: 17.0, fontWeight:  FontWeight.w500);
+  static TextStyle FLAT_BUTTON_STYLE = TextStyle(color: Constants.IMPERIAL_MEDIUM_BLUE, fontWeight: FontWeight.w800, fontSize: 16.5);
 }
 
 enum language {

@@ -112,7 +112,13 @@ class _ProfileCardAlignmentState extends State<ProfileCardAlignment> {
                   aspectRatio: 0.9,
                   child: Material(
                     borderRadius: BorderRadius.circular(12.0),
-                    child: Text(widget.profile.data["bio"]),
+                    child: Padding(
+                      padding: const EdgeInsets.fromLTRB(16.0, 8.0, 16.0, 8.0),
+                      child: Text(
+                        widget.profile.data["bio"],
+                        style: Constants.TEXT_STYLE_BIO,
+                      ),
+                    ),
                   ),
                 ),
               ),

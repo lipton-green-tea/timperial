@@ -17,40 +17,15 @@ class SwipePage extends StatefulWidget {
 
 class _SwipePageState extends State<SwipePage> {
 
-  void _signOut() async {
-    try {
-      await widget.auth.signOut();
-      widget.onSignedOut();
-    } catch (e) {
-      print('Error: $e');
-    }
-  }
-
   @override
   Widget build(BuildContext context) {
     return SafeArea(
       child: Scaffold(
-//      appBar: AppBar(
-//        elevation: 0.0,
-//        centerTitle: true,
-//        backgroundColor: Colors.grey[800],
-//        leading: IconButton(
-//            onPressed: () {}, icon: Icon(Icons.settings, color: Colors.grey)),
-//        title: FlatButton(
-//          child: Text('Log out'),
-//          onPressed: _signOut,
-//        ),
-//        actions: <Widget>[
-//          IconButton(
-//              onPressed: () {},
-//              icon: Icon(Icons.question_answer, color: Colors.grey)),
-//        ],
-//      ),
         backgroundColor: Constants.SECONDARY_COLOR,
         body: Column(
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
           children: <Widget>[
-            CardsSectionAlignment(context),
+            CardsSectionAlignment(context, widget.auth),
             Container(
               color: Constants.OUTLINE_COLOR,
               width: double.infinity,
@@ -72,18 +47,18 @@ class _SwipePageState extends State<SwipePage> {
         children: <Widget>[
           Spacer(),
           IconButton(
-            icon: Icon(Constants.EXPLORE_PAGE_UNSELECTED_ICON, size: 27.5,),
+            icon: Icon(Constants.EXPLORE_PAGE_UNSELECTED_ICON, color: Constants.UNSELECTED_ICON_COLOR, size: 27.5,),
             color: Constants.INACTIVE_COLOR_DARK,
             onPressed: widget.toMatchPage,
           ),
           Spacer(),
           IconButton(
-            icon: Icon(Constants.SWIPE_PAGE_SELECTED_ICON, size: 32.0),
+            icon: Icon(Constants.SWIPE_PAGE_SELECTED_ICON, color: Constants.SELECTED_ICON_COLOR , size: 32.0),
             onPressed: (){print("home pressed");},
           ),
           Spacer(),
           IconButton(
-              icon: Icon(Constants.PROFILE_PAGE_UNSELECTED_ICON, size: 27.5),
+              icon: Icon(Constants.PROFILE_PAGE_UNSELECTED_ICON, color: Constants.UNSELECTED_ICON_COLOR, size: 27.5),
               onPressed: () {
                 print("go to profile page button pressed");
                 widget.toProfilePage();

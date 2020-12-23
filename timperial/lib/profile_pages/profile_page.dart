@@ -1,10 +1,16 @@
 import 'dart:convert';
 
+import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:timperial/config.dart';
 import 'package:timperial/auth.dart';
 import 'package:timperial/backend.dart';
 import 'package:timperial/profile_pages/upload_profile_picture.dart';
+import 'package:fluttertoast/fluttertoast.dart';
+import 'package:carousel_slider/carousel_controller.dart';
+import 'package:carousel_slider/carousel_slider.dart';
+import 'dart:io' show Platform;
 
 class ProfilePage extends StatefulWidget {
   ProfilePage({this.auth, this.onSignedOut, this.toMatchPage, this.toSwipePage});
@@ -22,24 +28,63 @@ class ProfilePage extends StatefulWidget {
 
 class _ProfilePageState extends State<ProfilePage> {
   final formKey = new GlobalKey<FormState>();
+  final GlobalKey<ScaffoldState> _scaffoldKey = new GlobalKey<ScaffoldState>();
   TextEditingController nameTextController = new TextEditingController();
   TextEditingController snapchatTextController = new TextEditingController();
   TextEditingController bioTextController = new TextEditingController();
   List<Map> profilePages = [];
+  DocumentSnapshot user;
+  String currentGender = "gender";
+  bool selectGenderError = false;
+  bool genderChanged = false;
+  List<String> genders = [
+    "male",
+    "female",
+    "other"
+  ];
+  String currentPreference = "preference";
+  bool selectPreferenceError = false;
+  bool preferenceChanged = false;
+  List<String> preferences = [
+    "looking for men",
+    "looking for women",
+    "looking for both"
+  ];
 
   void validateAndSubmit() {
     if(validateAndSave()) {
-      widget.backend.updateBio(bioTextController.text);
-      //widget.reloadPageCallback(); // I don't think I need this
+      FocusScope.of(context).unfocus();
+      widget.backend.updateProfileInfo(
+          bioTextController.text,
+          nameTextController.text,
+          snapchatTextController.text,
+          currentGender,
+          currentPreference
+      );
+      setState(() {
+        genderChanged = true;
+        preferenceChanged = true;
+      });
+      Fluttertoast.showToast(msg: "profile updated");
     }
   }
 
   bool validateAndSave() {
     final form = formKey.currentState;
-    if(form.validate()) {
+    if(form.validate() && currentGender != "gender" && currentPreference != "preference" && user != null) {
       form.save();
       return true;
     } else {
+      if(currentGender == "gender") {
+        setState(() {
+          selectGenderError = true;
+        });
+      }
+      if(currentPreference == "gender") {
+        setState(() {
+          selectPreferenceError = true;
+        });
+      }
       return false;
     }
   }
@@ -51,7 +96,7 @@ class _ProfilePageState extends State<ProfilePage> {
   }
 
   Future openUploadProfilePicture(context, bool fromCamera) async {
-    Navigator.push(context, MaterialPageRoute(builder: (context) => UploadProfilePicture(fromCamera: fromCamera,)));
+    Navigator.push(context, MaterialPageRoute(builder: (context) => UploadProfilePicture(reloadProfilePages: reloadProfilePages ,fromCamera: fromCamera)));
   }
 
   void deleteProfilePage(String imageURL) {
@@ -61,12 +106,220 @@ class _ProfilePageState extends State<ProfilePage> {
     widget.backend.updateProfilePages(profilePages);
   }
 
+  void reloadProfilePages() {
+    print("reloading profile page");
+    widget.backend.getOwnUser().then((userDocument) {
+      setState(() {
+        profilePages = [];
+        if(userDocument.data["profile_pages"] != null) {
+          print("number of profile pages ${userDocument.data["profile_pages"].length}");
+          print(userDocument.data["profile_pages"].toString());
+          print(userDocument.data["profile_pages"][0].runtimeType);
+          userDocument.data["profile_pages"].forEach((jsonMap) {
+            String imageURL = jsonMap["image_url"];
+            profilePages.add({"image_url":imageURL});
+          });
+        }
+      });
+    });
+    print("profile pages reloaded");
+  }
+
+  void showGenderSelector(BuildContext context) {
+    if(Platform.isIOS) {
+      showCupertinoModalPopup(
+          context: context,
+          builder: (BuildContext context) {
+            return CupertinoActionSheet(
+              title: Text("Gender"),
+              actions: <Widget>[
+                CupertinoActionSheetAction(
+                  child: Text("male"),
+                  onPressed: () {
+                    setState(() {
+                      currentGender = "male";
+                      selectGenderError = false;
+                    });
+                  },
+                ),
+                CupertinoActionSheetAction(
+                  child: Text("female"),
+                  onPressed: () {
+                    setState(() {
+                      currentGender = "female";
+                      selectGenderError = false;
+                    });
+                  },
+                ),
+                CupertinoActionSheetAction(
+                  child: Text("both"),
+                  onPressed: () {
+                    setState(() {
+                      currentGender = "both";
+                      selectGenderError = false;
+                    });
+                  },
+                ),
+              ],
+            );
+          }
+      );
+    } else {
+      _scaffoldKey.currentState.showBottomSheet<void>(
+        (BuildContext context) {
+          return Container(
+            height: 150,
+            color: Colors.white,
+            child: Center(
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                mainAxisSize: MainAxisSize.min,
+                children: <Widget>[
+                  FlatButton(
+                    child: const Text("Male"),
+                    onPressed: () {
+                      setState(() {
+                        currentGender = "male";
+                        selectGenderError = false;
+                      });
+                      Navigator.pop(context);
+                    },
+                  ),
+                  FlatButton(
+                    child: const Text(
+                      "Female",
+                    ),
+                    onPressed: () {
+                      setState(() {
+                        currentGender = "female";
+                        selectGenderError = false;
+                      });
+                      Navigator.pop(context);
+                    },
+                  ),
+                  FlatButton(
+                    child: const Text(
+                      "Both",
+                    ),
+                    onPressed: () {
+                      setState(() {
+                        currentGender = "both";
+                        selectGenderError = false;
+                      });
+                      Navigator.pop(context);
+                    },
+                  )
+                ],
+              ),
+            ),
+          );
+        },
+      );
+    }
+  }
+
+  void showPreferenceSelector(BuildContext context) {
+    if(Platform.isIOS) {
+      showCupertinoModalPopup(
+          context: context,
+          builder: (BuildContext context) {
+            return CupertinoActionSheet(
+              title: Text("Preference"),
+              actions: <Widget>[
+                CupertinoActionSheetAction(
+                  child: Text("looking for men"),
+                  onPressed: () {
+                    setState(() {
+                      currentPreference = "looking for men";
+                      selectPreferenceError = false;
+                    });
+                  },
+                ),
+                CupertinoActionSheetAction(
+                  child: Text("looking for women"),
+                  onPressed: () {
+                    setState(() {
+                      currentPreference = "looking for women";
+                      selectPreferenceError = false;
+                    });
+                  },
+                ),
+                CupertinoActionSheetAction(
+                  child: Text("looking for both"),
+                  onPressed: () {
+                    setState(() {
+                      currentPreference = "looking for both";
+                      selectPreferenceError = false;
+                    });
+                  },
+                ),
+              ],
+            );
+          }
+      );
+    } else {
+      _scaffoldKey.currentState.showBottomSheet<void>(
+            (BuildContext context) {
+          return Container(
+            height: 150,
+            color: Colors.white,
+            child: Center(
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                mainAxisSize: MainAxisSize.min,
+                children: <Widget>[
+                  FlatButton(
+                    child: const Text(
+                      "looking for men"
+                    ),
+                    onPressed: () {
+                      setState(() {
+                        currentPreference = "looking for men";
+                        selectPreferenceError = false;
+                      });
+                      Navigator.pop(context);
+                    },
+                  ),
+                  FlatButton(
+                    child: const Text(
+                      "looking for women",
+                    ),
+                    onPressed: () {
+                      setState(() {
+                        currentPreference = "looking for women";
+                        selectPreferenceError = false;
+                      });
+                      Navigator.pop(context);
+                    },
+                  ),
+                  FlatButton(
+                    child: const Text(
+                      "looking for both",
+                    ),
+                    onPressed: () {
+                      setState(() {
+                        currentPreference = "looking for both";
+                        selectPreferenceError = false;
+                      });
+                      Navigator.pop(context);
+                    },
+                  )
+                ],
+              ),
+            ),
+          );
+        },
+      );
+    }
+  }
+
   @override
   void initState() {
     super.initState();
 
     widget.backend.getOwnUser().then((userDocument) {
       setState(() {
+        user = userDocument;
         if(userDocument.data["name"] != null) {
           nameTextController.text = userDocument.data["name"];
         }
@@ -84,6 +337,24 @@ class _ProfilePageState extends State<ProfilePage> {
             profilePages.add({"image_url":imageURL});
           });
         }
+        if(userDocument.data["gender"] != null) {
+          if(userDocument.data["gender"] == "") {
+            currentGender = "gender";
+          } else {
+            currentGender = userDocument.data["gender"];
+          }
+        } else {
+          currentGender = "gender";
+        }
+        if(userDocument.data["preference"] != null) {
+          if(userDocument.data["preference"] == "") {
+            currentPreference = "preference";
+          } else {
+            currentPreference = userDocument.data["preference"];
+          }
+        } else {
+          currentPreference = "preference";
+        }
       });
     });
   }
@@ -92,30 +363,47 @@ class _ProfilePageState extends State<ProfilePage> {
   Widget build(BuildContext context) {
     return SafeArea(
       child: Scaffold(
+        key: _scaffoldKey,
         backgroundColor: Constants.SECONDARY_COLOR,
-        body: Column(
-          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-          children: <Widget>[
-            Expanded(
-              child: ListView(
-                padding: EdgeInsets.all(8.0),
-                children: buildInputs() + buildImages(context)
+        body: GestureDetector(
+          onTap: () {
+            FocusScopeNode currentFocus = FocusScope.of(context);
+
+            if (!currentFocus.hasPrimaryFocus) {
+              currentFocus.unfocus();
+            }
+          },
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: <Widget>[
+              Expanded(
+                child: Form(
+                  key: formKey,
+                  child: ListView(
+                    padding: EdgeInsets.all(8.0),
+                    children: [SizedBox(height: 16,), buildImageCarousel(), SizedBox(height: 8,)] + buildInputs(context)
+                  ),
+                ),
               ),
-            ),
-            Container(
-              color: Constants.OUTLINE_COLOR,
-              width: double.infinity,
-              height: 0.5,
-            ),
-            navigationBar()
-          ],
+              Container(
+                color: Constants.OUTLINE_COLOR,
+                width: double.infinity,
+                height: 0.5,
+              ),
+              navigationBar()
+            ],
+          ),
         ),
       ),
     );
   }
 
-  List<Widget> buildInputs() {
-    return [
+  List<Widget> buildInputs(BuildContext scaffoldContext) {
+    List<Widget> widgets = [
+      Padding(
+        padding: const EdgeInsets.fromLTRB(0.0,20.0,0.0,0.0),
+        child: Text("Name", style: Constants.TEXT_STYLE_HINT_DARK,),
+      ),
       TextFormField(
           controller: nameTextController,
           validator: (value) {
@@ -126,6 +414,10 @@ class _ProfilePageState extends State<ProfilePage> {
             }
             return null;
           }
+      ),
+      Padding(
+        padding: const EdgeInsets.fromLTRB(0.0,20.0,0.0,0.0),
+        child: Text("Snapchat", style: Constants.TEXT_STYLE_HINT_DARK,),
       ),
       TextFormField(
           controller: snapchatTextController,
@@ -138,27 +430,178 @@ class _ProfilePageState extends State<ProfilePage> {
             return null;
           }
       ),
+      Padding(
+        padding: const EdgeInsets.fromLTRB(0.0,20.0,0.0,0.0),
+        child: Text("My Bio", style: Constants.TEXT_STYLE_HINT_DARK,),
+      ),
       TextFormField(
         keyboardType: TextInputType.multiline,
         minLines: 2,
         maxLines: 5,
         controller: bioTextController,
         validator: (value) => value.length > 150 ? 'you are over the 150 character limit' : null
-      ),
+      )
+    ];
+
+    if(user != null && !genderChanged) {
+      if(user.data["gender"] == "") {
+        widgets.add(
+          RaisedButton(
+            child: Text(currentGender),
+            onPressed: () {
+              showGenderSelector(scaffoldContext);
+            },
+          )
+        );
+        if(currentGender == "male" || currentGender == "female" || currentGender == "other") {
+          widgets.add(
+            Text("this cannot be changed once you hit 'update profile'")
+          );
+        } else if (selectGenderError) {
+          widgets.add(
+            Text("please select a gender", style: Constants.TEXT_STYLE_ERROR,)
+          );
+        }
+      }
+    }
+
+    if(user != null && !preferenceChanged) {
+      if(user.data["preference"] == "") {
+        widgets.add(
+            RaisedButton(
+              child: Text(currentPreference),
+              onPressed: () {
+                showPreferenceSelector(scaffoldContext);
+              },
+            )
+        );
+        if(currentPreference == "looking for men" || currentPreference == "looking for women" || currentPreference == "looking for both") {
+          widgets.add(
+              Text("this cannot be changed once you hit 'update profile'")
+          );
+        } else if (selectPreferenceError) {
+          widgets.add(
+              Text("please select a preference", style: Constants.TEXT_STYLE_ERROR,)
+          );
+        }
+      }
+    }
+
+    widgets.addAll([
+      SizedBox(height: 20,),
       FlatButton(
         child: Text(
           'Update Profile',
-          style: TextStyle(
-            color: Constants.HIGHLIGHT_COLOR,
-            fontWeight: FontWeight.w800,
-            fontSize: 16.5,
-          ),
+          style: Constants.FLAT_BUTTON_STYLE
         ),
         onPressed: () {
           validateAndSubmit();
         },
       ),
-    ];
+      FlatButton(
+        child: Text(
+          'Log Out',
+          style: Constants.FLAT_BUTTON_STYLE
+        ),
+        onPressed: widget.onSignedOut,
+      ),
+    ]);
+
+    return widgets;
+  }
+
+  Widget buildImageCarousel() {
+    final List<Widget> imageSliders = profilePages.map((page) => Container(
+      child: Container(
+        margin: EdgeInsets.all(5.0),
+        child: ClipRRect(
+            borderRadius: BorderRadius.all(Radius.circular(5.0)),
+            child: Stack(
+              children: <Widget>[
+                Align(
+                  alignment: Alignment.topCenter,
+                  child: Image.network(page["image_url"])
+                ),
+                Align(
+                  alignment: Alignment.topRight,
+                  child: IconButton(
+                    icon: Icon(Constants.DELETE_IMAGE_ICON, color: Colors.white,),
+                    onPressed: () {
+                      deleteProfilePage(page["image_url"]);
+                    }
+                  )
+                ),
+                Positioned(
+                  bottom: 0.0,
+                  left: 0.0,
+                  right: 0.0,
+                  child: Container(
+                    decoration: BoxDecoration(
+                      gradient: LinearGradient(
+                        colors: [
+                          Color.fromARGB(200, 0, 0, 0),
+                          Color.fromARGB(0, 0, 0, 0)
+                        ],
+                        begin: Alignment.bottomCenter,
+                        end: Alignment.topCenter,
+                      ),
+                    ),
+                    padding: EdgeInsets.symmetric(vertical: 10.0, horizontal: 20.0),
+                    child: Text(
+                      'Picture ${profilePages.indexOf(page) + 1}',
+                      style: TextStyle(
+                        color: Colors.white,
+                        fontSize: 20.0,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                  ),
+                ),
+              ],
+            )
+        ),
+      ),
+    )).toList();
+
+    if(imageSliders.length < 3) {
+      imageSliders.add(
+        Container(
+          margin: EdgeInsets.all(5.0),
+          child: ClipRRect(
+              borderRadius: BorderRadius.all(Radius.circular(5.0)),
+              child: Stack(
+                children: <Widget>[
+                  SizedBox(
+                    width: double.infinity,
+                    height: double.infinity,
+                    child: RaisedButton(
+                      onPressed: () {
+                        openUploadProfilePicture(context, false);
+                      },
+                      child: Column(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: <Widget>[
+                          Icon(Icons.add_a_photo, color: Constants.IMPERIAL_MEDIUM_BLUE,),
+                          Text("Add a photo", style: TextStyle(color: Constants.IMPERIAL_MEDIUM_BLUE),)
+                        ],
+                      ),
+                    ),
+                  )
+                ],
+              )
+          ),
+        ),
+      );
+    }
+
+    return CarouselSlider(
+      options: CarouselOptions(
+        autoPlay: false,
+        aspectRatio: 1.13,
+        enlargeCenterPage: true,
+      ),
+      items: imageSliders,
+    );
   }
 
   List<Widget> buildImages(BuildContext context) {
@@ -215,7 +658,7 @@ class _ProfilePageState extends State<ProfilePage> {
         children: <Widget>[
           Spacer(),
           IconButton(
-              icon: Icon(Constants.EXPLORE_PAGE_UNSELECTED_ICON, size: 27.5,),
+              icon: Icon(Constants.EXPLORE_PAGE_UNSELECTED_ICON, color: Constants.UNSELECTED_ICON_COLOR, size: 27.5,),
               color: Constants.INACTIVE_COLOR_DARK,
               onPressed: () {
                 print("go to match page button pressed");
@@ -224,7 +667,7 @@ class _ProfilePageState extends State<ProfilePage> {
           ),
           Spacer(),
           IconButton(
-            icon: Icon(Constants.SWIPE_PAGE_SELECTED_ICON, size: 32.0),
+            icon: Icon(Constants.SWIPE_PAGE_UNSELECTED_ICON, color: Constants.UNSELECTED_ICON_COLOR, size: 27.5),
             onPressed: () {
               print("go to swipe page button pressed");
               widget.toSwipePage();
@@ -232,7 +675,7 @@ class _ProfilePageState extends State<ProfilePage> {
           ),
           Spacer(),
           IconButton(
-              icon: Icon(Constants.PROFILE_PAGE_UNSELECTED_ICON, size: 27.5),
+              icon: Icon(Constants.PROFILE_PAGE_SELECTED_ICON, color: Constants.SELECTED_ICON_COLOR, size: 32.0),
               onPressed: () {
                 print("go to profile page button pressed");
               }
