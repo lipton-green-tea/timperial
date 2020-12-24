@@ -118,7 +118,7 @@ class _ProfilePageState extends State<ProfilePage> {
 
   void reloadProfilePages() {
     print("reloading profile page");
-    widget.backend.getOwnUser().then((userDocument) {
+    widget.backend.getOwnUser(reload: true).then((userDocument) {
       setState(() {
         profilePages = [];
         if(userDocument.data["profile_pages"] != null) {

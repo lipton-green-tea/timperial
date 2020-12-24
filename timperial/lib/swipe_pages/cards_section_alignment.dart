@@ -273,8 +273,8 @@ class _CardsSectionState extends State<CardsSectionAlignment>
       frontCardAlign = defaultFrontCardAlign;
       frontCardRot = 0.0;
     });
-    if(cards.length < 10) {
-      addCards(10);
+    if(cards.length < 4) {
+      addCards(4);
     }
   }
 

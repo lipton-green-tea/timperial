@@ -46,7 +46,7 @@ abstract class BaseBackend {
   Future<QuerySnapshot> getFollowingFromFirestoreID(String userFirestoreID);
   Future<bool> amFollowing(String userFirestoreID);
 
-  Future<DocumentSnapshot> getOwnUser();
+  Future<DocumentSnapshot> getOwnUser({bool reload});
   Future<QuerySnapshot> getMatches();
 
   void postUserComment(String postID, String text);
@@ -400,29 +400,6 @@ class Backend implements BaseBackend {
 
       return postFutures;
     });
-  }
-
-  Future<QuerySnapshot> getRecommendedProfiles(int quantity, List<String> excluded) async {
-//    DocumentSnapshot user = await getUser(await getOwnFirestoreUserID());
-//    List<String> final_ids;
-//    DocumentSnapshot user_ids = await _firestore.collection('online_variables').document('user_ids').get();
-//    excluded.addAll(user.data["swipes"]);
-//
-//    if(user.data["gender"] == "male") {
-//      List<String> potential_ids = user_ids.data["female_ids"];
-//      excluded.forEach((id) => {potential_ids.remove(id)});
-//      potential_ids.shuffle();
-//      final_ids = potential_ids.sublist(0, quantity - 1);
-//    } else {
-//      List<String> potential_ids = user_ids.data["male_ids"];
-//      excluded.forEach((id) => {potential_ids.remove(id)});
-//      potential_ids.shuffle();
-//      final_ids = potential_ids.sublist(0, quantity - 1);
-//    }
-//
-//    return _firestore.collection('users').where('user_id', whereIn: final_ids).limit(quantity).getDocuments();
-
-      return _firestore.collection('users').limit(quantity).getDocuments();
   }
 
   Future<List<Future<DocumentSnapshot>>> getSentPosts() async {
@@ -1027,9 +1004,21 @@ class Backend implements BaseBackend {
     return spikedList;
   }
 
-  Future<DocumentSnapshot> getOwnUser() async {
-    String userID = await getOwnUserID();
-    return _firestore.collection('users').document(userID).get();
+  Future<DocumentSnapshot> getOwnUser({bool reload = false}) async {
+    if(ownUserID == null) {
+      ownUserID = await getOwnUserID();
+    }
+    if(ownUserDocument == null || reload) {
+      ownUserDocument = await _firestore.collection('users').document(ownUserID).get();
+    }
+    return ownUserDocument;
+  }
+
+  void reloadOwnUser() async {
+    if(ownUserID == null) {
+      ownUserID = await getOwnUserID();
+    }
+    ownUserDocument = await _firestore.collection('users').document(ownUserID).get();
   }
 
   void updateProfileInfo(String bioText, String name, String snapchat, String gender, String preference) {
@@ -1150,6 +1139,69 @@ class Backend implements BaseBackend {
     if(reloadProfilePage != null) {
       reloadProfilePage();
     }
+  }
+
+  Future<QuerySnapshot> getRecommendedProfiles(int quantity, List<String> excluded) async {
+    DocumentSnapshot user = await getOwnUser();
+    String gender = user.data["gender"];
+    String preference = user.data["preference"];
+    List<String> final_ids;
+    List<String> potential_ids = [];
+    DocumentSnapshot user_ids = await _firestore.collection('online_variables').document('user_ids').get();
+    excluded.addAll(user.data["swipes"]);
+
+    if(user.data["gender"] == "male") {
+      List<String> potential_ids = user_ids.data["female_ids"];
+      excluded.forEach((id) => {potential_ids.remove(id)});
+      potential_ids.shuffle();
+      final_ids = potential_ids.sublist(0, quantity - 1);
+    } else {
+      List<String> potential_ids = user_ids.data["male_ids"];
+      excluded.forEach((id) => {potential_ids.remove(id)});
+      potential_ids.shuffle();
+      final_ids = potential_ids.sublist(0, quantity - 1);
+    }
+
+    if(gender == "male") {
+      if(preference == "looking for men") {
+        // gay dudes
+        potential_ids.addAll(user_ids.data["homosexual_male_ids"]);
+      } else if (preference == "looking for women") {
+        // straight dudes
+        potential_ids.addAll(user_ids.data["hetrosexual_female_ids"]);
+      } else { // preference == "looking for both"
+        // bi dudes
+        potential_ids.addAll(user_ids.data["homosexual_male_ids"] + user_ids.data["hetrosexual_female_ids"]);
+      }
+    } else if (gender == "female") {
+      if(preference == "looking for men") {
+        // straight gals
+        potential_ids.addAll(user_ids.data["hetrosexual_male_ids"]);
+      } else if (preference == "looking for women") {
+        // lesbian gals
+        potential_ids.addAll(user_ids.data["homosexual_female_ids"]);
+      } else { // preference == "looking for both"
+        // bi gals
+        potential_ids.addAll(user_ids.data["hetrosexual_male_ids"] + user_ids.data["homosexual_female_ids"]);
+      }
+    } else {
+      if(preference == "looking for men") {
+        // straight dudes and gay dudes
+        potential_ids.addAll(user_ids.data["hetrosexual_male_ids"] + user_ids.data["homosexual_male_ids"]);
+      } else if (preference == "looking for women") {
+        // straight gals and lesbian gals
+        potential_ids.addAll(user_ids.data["hetrosexual_female_ids"] + user_ids.data["homosexual_female_ids"]);
+      } else { // preference == "looking for both"
+        // straight dudes, gay dudes, straight gals and lesbian gals
+        potential_ids.addAll(user_ids.data["hetrosexual_male_ids"] + user_ids.data["homosexual_male_ids"] + user_ids.data["hetrosexual_female_ids"] + user_ids.data["homosexual_female_ids"]);
+      }
+    }
+
+    excluded.forEach((id) => {potential_ids.remove(id)});
+    potential_ids.shuffle();
+    final_ids = potential_ids.sublist(0, quantity - 1);
+
+    return _firestore.collection('users').where('user_id', whereIn: final_ids).limit(quantity).getDocuments();
   }
 
   Future<QuerySnapshot> getMatches() async {
