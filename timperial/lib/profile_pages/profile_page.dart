@@ -37,6 +37,7 @@ class _ProfilePageState extends State<ProfilePage> {
   String currentGender = "gender";
   bool selectGenderError = false;
   bool genderChanged = false;
+  bool firstGenderUpload = false;
   List<String> genders = [
     "male",
     "female",
@@ -45,6 +46,7 @@ class _ProfilePageState extends State<ProfilePage> {
   String currentPreference = "preference";
   bool selectPreferenceError = false;
   bool preferenceChanged = false;
+  bool firstPreferenceUpload = false;
   List<String> preferences = [
     "looking for men",
     "looking for women",
@@ -61,6 +63,14 @@ class _ProfilePageState extends State<ProfilePage> {
           currentGender,
           currentPreference
       );
+      if(firstPreferenceUpload && firstGenderUpload) {
+        widget.backend.addToStacks(
+            currentGender,
+            currentPreference
+        );
+      }
+      firstGenderUpload = false;
+      firstPreferenceUpload = false;
       setState(() {
         genderChanged = true;
         preferenceChanged = true;
@@ -80,7 +90,7 @@ class _ProfilePageState extends State<ProfilePage> {
           selectGenderError = true;
         });
       }
-      if(currentPreference == "gender") {
+      if(currentPreference == "preference") {
         setState(() {
           selectPreferenceError = true;
         });
@@ -339,20 +349,24 @@ class _ProfilePageState extends State<ProfilePage> {
         }
         if(userDocument.data["gender"] != null) {
           if(userDocument.data["gender"] == "") {
+            firstGenderUpload = true;
             currentGender = "gender";
           } else {
             currentGender = userDocument.data["gender"];
           }
         } else {
+          firstGenderUpload = true;
           currentGender = "gender";
         }
         if(userDocument.data["preference"] != null) {
           if(userDocument.data["preference"] == "") {
+            firstPreferenceUpload = true;
             currentPreference = "preference";
           } else {
             currentPreference = userDocument.data["preference"];
           }
         } else {
+          firstPreferenceUpload = true;
           currentPreference = "preference";
         }
       });
