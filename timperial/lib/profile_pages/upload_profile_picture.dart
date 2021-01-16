@@ -4,7 +4,8 @@ import 'package:image_picker/image_picker.dart';
 import 'package:timperial/backend.dart';
 import 'package:image_cropper/image_cropper.dart';
 import 'package:timperial/config.dart';
-import 'package:flutter_image_compress/flutter_image_compress.dart';
+//import 'package:flutter_image_compress/flutter_image_compress.dart';
+import 'package:flutter_native_image/flutter_native_image.dart';
 
 class UploadProfilePicture extends StatefulWidget {
   UploadProfilePicture({this.reloadProfilePages, this.fromCamera = false});
@@ -50,17 +51,26 @@ class _UploadProfilePictureState extends State<UploadProfilePicture> {
     });
   }
 
-  Future<File> resizeImage(File imageFile) async {
-    String targetPath = imageFile.path;
-    var resizedImageBytes = await FlutterImageCompress.compressWithFile(
-      imageFile.absolute.path,
-      minWidth: 400,
-      minHeight: 400,
+  Future<File> resizeImage(File imageFile) {
+    return FlutterNativeImage.compressImage(
+      imageFile.path,
       quality: 90,
+      targetHeight: 440,
+      targetWidth: 396
     );
-    Future<File> resizedImageFuture = File(targetPath).writeAsBytes(resizedImageBytes);
-    return resizedImageFuture;
   }
+
+//  Future<File> resizeImage(File imageFile) async {
+//    String targetPath = imageFile.path;
+//    var resizedImageBytes = await FlutterImageCompress.compressWithFile(
+//      imageFile.absolute.path,
+//      minWidth: 400,
+//      minHeight: 400,
+//      quality: 90,
+//    );
+//    Future<File> resizedImageFuture = File(targetPath).writeAsBytes(resizedImageBytes);
+//    return resizedImageFuture;
+//  }
 
   @override
   Widget build(BuildContext context) {
