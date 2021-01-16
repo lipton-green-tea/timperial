@@ -1,0 +1,38 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+	<key>CLIENT_ID</key>
+	<string>399725705405-14f974teu7vbgmhoc41h4tl7dg3s8mdg.apps.googleusercontent.com</string>
+	<key>REVERSED_CLIENT_ID</key>
+	<string>com.googleusercontent.apps.399725705405-14f974teu7vbgmhoc41h4tl7dg3s8mdg</string>
+	<key>ANDROID_CLIENT_ID</key>
+	<string>399725705405-6t1jh331meoaqnogjftskt3kvpo8hae9.apps.googleusercontent.com</string>
+	<key>API_KEY</key>
+	<string>AIzaSyD50c4WQkrquYLIJ0lJk8Mdxyi70xCywBg</string>
+	<key>GCM_SENDER_ID</key>
+	<string>399725705405</string>
+	<key>PLIST_VERSION</key>
+	<string>1</string>
+	<key>BUNDLE_ID</key>
+	<string>com.timperial.ios</string>
+	<key>PROJECT_ID</key>
+	<string>timperial-4c4f5</string>
+	<key>STORAGE_BUCKET</key>
+	<string>timperial-4c4f5.appspot.com</string>
+	<key>IS_ADS_ENABLED</key>
+	<false></false>
+	<key>IS_ANALYTICS_ENABLED</key>
+	<false></false>
+	<key>IS_APPINVITE_ENABLED</key>
+	<true></true>
+	<key>IS_GCM_ENABLED</key>
+	<true></true>
+	<key>IS_SIGNIN_ENABLED</key>
+	<true></true>
+	<key>GOOGLE_APP_ID</key>
+	<string>1:399725705405:ios:bd4f40f1b3668780ce9fd4</string>
+	<key>DATABASE_URL</key>
+	<string>https://timperial-4c4f5.firebaseio.com</string>
+</dict>
+</plist>
