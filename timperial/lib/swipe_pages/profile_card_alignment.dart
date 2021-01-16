@@ -5,7 +5,7 @@ import 'package:flutter/material.dart';
 import 'package:timperial/backend.dart';
 import 'package:firebase_storage/firebase_storage.dart';
 import 'package:timperial/config.dart';
-import 'package:flip_card/flip_card.dart';
+import 'package:fluttertoast/fluttertoast.dart';
 
 class ProfileCardAlignment extends StatefulWidget {
   ProfileCardAlignment({this.profile,Key key}) : super(key: key);
@@ -85,8 +85,30 @@ class _ProfileCardAlignmentState extends State<ProfileCardAlignment> {
                     height: 80,
                     width: double.infinity,
                     padding: EdgeInsets.symmetric(vertical: 16.0, horizontal: 16.0),
-                    child: Text('${widget.profile.data["name"]}',
-                        style: Constants.TEXT_STYLE_CAPTION_DARK
+                    child: Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: <Widget>[
+                        Text('${widget.profile.data["name"]}',
+                            style: Constants.TEXT_STYLE_CAPTION_DARK
+                        ),
+                        FlatButton(
+                          child: Text(
+                              reported?'Reported':'Report',
+                              style: Constants.FLAT_RED_BUTTON_STYLE
+                          ),
+                          onPressed: () {
+                            if(reported) {
+                              Fluttertoast.showToast(msg: "already reported");
+                            } else {
+                              setState(() {
+                                reported = true;
+                              });
+                              widget.backend.report(widget.profile.documentID);
+                              Fluttertoast.showToast(msg: "reported user");
+                            }
+                          },
+                        ),
+                      ],
                     ),
                     color: Constants.BACKGROUND_COLOR,
                   ),
@@ -128,8 +150,30 @@ class _ProfileCardAlignmentState extends State<ProfileCardAlignment> {
                   height: 80,
                   width: double.infinity,
                   padding: EdgeInsets.symmetric(vertical: 16.0, horizontal: 16.0),
-                  child: Text('${widget.profile.data["name"]}',
-                      style: Constants.TEXT_STYLE_CAPTION_DARK
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: <Widget>[
+                      Text('${widget.profile.data["name"]}',
+                          style: Constants.TEXT_STYLE_CAPTION_DARK
+                      ),
+                      FlatButton(
+                        child: Text(
+                            reported?'Reported':'Report',
+                            style: Constants.FLAT_RED_BUTTON_STYLE
+                        ),
+                        onPressed: () {
+                          if(reported) {
+                            Fluttertoast.showToast(msg: "already reported");
+                          } else {
+                            setState(() {
+                              reported = true;
+                            });
+                            widget.backend.report(widget.profile.documentID);
+                            Fluttertoast.showToast(msg: "reported user");
+                          }
+                        },
+                      ),
+                    ],
                   ),
                   color: Constants.BACKGROUND_COLOR,
                 ),

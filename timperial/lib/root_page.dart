@@ -8,6 +8,7 @@ import 'package:timperial/error_pages/unverified_email_page.dart';
 import 'package:timperial/match_pages/match_page.dart';
 import 'package:timperial/profile_pages/profile_page.dart';
 import 'package:timperial/login_pages/create_account_page.dart';
+import 'package:timperial/login_pages/forgot_password_page.dart';
 
 class RootPage extends StatefulWidget {
   RootPage({this.auth});
@@ -30,6 +31,7 @@ enum Pages {
   test,
   login,
   register,
+  forgotPassword,
   unverified
 }
 
@@ -58,6 +60,7 @@ class _RootPageState extends State<RootPage> {
   }
 
   void _signedOut() {
+    widget.auth.signOut();
     setState(() {
       _authStatus = AuthStatus.notSignedIn;
     });
@@ -80,6 +83,12 @@ class _RootPageState extends State<RootPage> {
   void _toCreateAccountPage() {
     setState(() {
       _currentPage = Pages.register;
+    });
+  }
+
+  void _toForgotPasswordPage() {
+    setState(() {
+      _currentPage = Pages.forgotPassword;
     });
   }
 
@@ -109,12 +118,18 @@ class _RootPageState extends State<RootPage> {
           auth: widget.auth,
           toLoginPage: _toLoginPage
         );
+      } else if (_currentPage == Pages.forgotPassword) {
+        return ForgotPasswordPage(
+            auth: widget.auth,
+            toLoginPage: _toLoginPage
+        );
       } else {
         return LoginPage(
           auth: widget.auth,
           onSignedIn: _signedIn,
           toUnverifiedPage: _toUnverifiedPage,
           toCreateAccountPage: _toCreateAccountPage,
+          toForgotPasswordPage: _toForgotPasswordPage,
         );
       }
     } else {

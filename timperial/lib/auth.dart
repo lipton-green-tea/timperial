@@ -30,8 +30,8 @@ class Auth implements BaseAuth {
     return user.uid;
   }
 
-  Future<String> currentUser() async {
-    if(userID == null) {
+  Future<String> currentUser({reload = true}) async {
+    if(userID == null || reload) {
       FirebaseUser user = await _firebaseAuth.currentUser();
       userObject = user;
       userID = user.uid;
@@ -39,8 +39,8 @@ class Auth implements BaseAuth {
     return userID;
   }
 
-  Future<FirebaseUser> currentUserObject() async {
-    if(userObject == null) {
+  Future<FirebaseUser> currentUserObject({reload = true}) async {
+    if(userObject == null || reload) {
       FirebaseUser user = await _firebaseAuth.currentUser();
       userObject = user;
       userID = user.uid;
