@@ -162,10 +162,10 @@ class _ProfilePageState extends State<ProfilePage> {
                   },
                 ),
                 CupertinoActionSheetAction(
-                  child: Text("both"),
+                  child: Text("other"),
                   onPressed: () {
                     setState(() {
-                      currentGender = "both";
+                      currentGender = "other";
                       selectGenderError = false;
                     });
                   },
@@ -209,11 +209,11 @@ class _ProfilePageState extends State<ProfilePage> {
                   ),
                   FlatButton(
                     child: const Text(
-                      "Both",
+                      "Other",
                     ),
                     onPressed: () {
                       setState(() {
-                        currentGender = "both";
+                        currentGender = "other";
                         selectGenderError = false;
                       });
                       Navigator.pop(context);
@@ -341,7 +341,6 @@ class _ProfilePageState extends State<ProfilePage> {
         }
         if(userDocument.data["profile_pages"] != null) {
           print(userDocument.data["profile_pages"].toString());
-          print(userDocument.data["profile_pages"][0].runtimeType);
           userDocument.data["profile_pages"].forEach((jsonMap) {
             String imageURL = jsonMap["image_url"];
             profilePages.add({"image_url":imageURL});
@@ -458,7 +457,7 @@ class _ProfilePageState extends State<ProfilePage> {
     ];
 
     if(user != null && !genderChanged) {
-      if(user.data["gender"] == "") {
+      if(user.data["gender"] != "male" && user.data["gender"] != "female" && user.data["gender"] != "other") {
         widgets.add(
           RaisedButton(
             child: Text(currentGender),
@@ -480,7 +479,7 @@ class _ProfilePageState extends State<ProfilePage> {
     }
 
     if(user != null && !preferenceChanged) {
-      if(user.data["preference"] == "") {
+      if(user.data["preference"] != "looking for men" && user.data["preference"] != "looking for women" && user.data["preference"] != "looking for both") {
         widgets.add(
             RaisedButton(
               child: Text(currentPreference),

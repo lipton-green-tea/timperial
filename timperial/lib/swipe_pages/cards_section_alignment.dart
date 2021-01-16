@@ -1,12 +1,10 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
-import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:http/http.dart';
 import 'profile_card_alignment.dart';
 import 'dart:math';
 import 'package:timperial/backend.dart';
 import 'package:timperial/config.dart';
-import 'package:timperial/auth.dart';
 import 'package:timperial/auth.dart';
 
 List<Alignment> cardsAlign = [
@@ -47,6 +45,7 @@ class _CardsSectionState extends State<CardsSectionAlignment>
   BaseAuth auth = new Auth();
   String userID = "";
   DocumentSnapshot userDocument;
+  bool stackEmpty = false;
 
   final Alignment defaultFrontCardAlign = Alignment(0.0, 0.0);
   Alignment frontCardAlign;
@@ -67,7 +66,7 @@ class _CardsSectionState extends State<CardsSectionAlignment>
         userDocument = user;
       });
       if(profileComplete(user)) {
-        addCards(4); // add initial 4 cards
+        addCards(7); // add initial 7 cards
 
         frontCardAlign = cardsAlign[2];
 
@@ -86,7 +85,10 @@ class _CardsSectionState extends State<CardsSectionAlignment>
   }
 
   void addCards(int numberOfCards) {
-    backend.getRecommendedProfiles(numberOfCards, profileIDs).then((profilesSnapshot) => {
+    backend.getRecommendedProfiles(numberOfCards, profileIDs).then((profilesSnapshot) {
+      setState(() {
+        stackEmpty = profilesSnapshot.documents.isEmpty;
+      });
       profilesSnapshot.documents.forEach((profile) {
         profileIDs.add(profile.documentID);
         if(cards.length < 4) { // only set state for the first four cards, and let the rest update in the background as they do not affect the widget tree
@@ -96,7 +98,7 @@ class _CardsSectionState extends State<CardsSectionAlignment>
         } else {
           cards.add(ProfileCardAlignment(profile: profile, key: UniqueKey()));
         }
-      })
+      });
     });
   }
 
@@ -114,6 +116,121 @@ class _CardsSectionState extends State<CardsSectionAlignment>
           child: Text("Complete your profile to unlock swiping"),
         ),
       );
+    } else if(cards.length == 0 && stackEmpty) {
+      return Expanded(
+        child: Center(
+          child: Text("You swiped through our whole database"),
+        ),
+      );
+    } else if(cards.length == 1) {
+      return Expanded(
+          child: Stack(
+            children: <Widget>[
+              frontCard(),
+              // Prevent swiping if the cards are animating
+              _swipeController.status != AnimationStatus.forward
+                  ? SizedBox.expand(
+                  child: GestureDetector(
+                    //onTap: () {},
+
+                    // While dragging the first card
+                    onPanUpdate: (DragUpdateDetails details) {
+                      // Add what the user swiped in the last frame to the alignment of the card
+                      setState(() {
+                        // 20 is the "speed" at which the user moves the card
+                        frontCardAlign = Alignment(
+                            frontCardAlign.x +
+                                25 * // at 20 this moves at the same speed as your finger
+                                    details.delta.dx /
+                                    MediaQuery
+                                        .of(context)
+                                        .size
+                                        .width,
+                            frontCardAlign.y +
+                                20 *
+                                    details.delta.dy /
+                                    MediaQuery
+                                        .of(context)
+                                        .size
+                                        .height);
+
+                        frontCardRot =
+                            frontCardAlign.x * 1.2; // * rotation speed;
+                      });
+                    },
+                    // When releasing the first card
+                    onPanEnd: (_) {
+                      // If the front card was swiped far enough to count as swiped
+                      if (frontCardAlign.x > 3.0 || frontCardAlign.x < -3.0) {
+                        addInteraction(context);
+                        animateCards();
+                      } else {
+                        // Return to the initial rotation and alignment
+                        setState(() {
+                          frontCardAlign = defaultFrontCardAlign;
+                          frontCardRot = 0.0;
+                        });
+                      }
+                    },
+                  ))
+                  : Container(),
+            ],
+          ));
+    } else if(cards.length == 2) {
+      return Expanded(
+          child: Stack(
+            children: <Widget>[
+              middleCard(),
+              frontCard(),
+              // Prevent swiping if the cards are animating
+              _swipeController.status != AnimationStatus.forward
+                  ? SizedBox.expand(
+                  child: GestureDetector(
+                    //onTap: () {},
+
+                    // While dragging the first card
+                    onPanUpdate: (DragUpdateDetails details) {
+                      // Add what the user swiped in the last frame to the alignment of the card
+                      setState(() {
+                        // 20 is the "speed" at which the user moves the card
+                        frontCardAlign = Alignment(
+                            frontCardAlign.x +
+                                25 * // at 20 this moves at the same speed as your finger
+                                    details.delta.dx /
+                                    MediaQuery
+                                        .of(context)
+                                        .size
+                                        .width,
+                            frontCardAlign.y +
+                                20 *
+                                    details.delta.dy /
+                                    MediaQuery
+                                        .of(context)
+                                        .size
+                                        .height);
+
+                        frontCardRot =
+                            frontCardAlign.x * 1.2; // * rotation speed;
+                      });
+                    },
+                    // When releasing the first card
+                    onPanEnd: (_) {
+                      // If the front card was swiped far enough to count as swiped
+                      if (frontCardAlign.x > 3.0 || frontCardAlign.x < -3.0) {
+                        addInteraction(context);
+                        animateCards();
+                      } else {
+                        // Return to the initial rotation and alignment
+                        setState(() {
+                          frontCardAlign = defaultFrontCardAlign;
+                          frontCardRot = 0.0;
+                        });
+                      }
+                    },
+                  ))
+                  : Container(),
+            ],
+          ));
     } else if(cards.length >= 3) {
       return Expanded(
           child: Stack(
@@ -183,7 +300,8 @@ class _CardsSectionState extends State<CardsSectionAlignment>
     return (
       user.data["name"] != "" &&
       user.data["gender"] != "" &&
-      user.data["snapchat"] != ""
+      user.data["snapchat"] != "" &&
+      user.data["preference"] != ""
     );
   }
 
@@ -273,8 +391,8 @@ class _CardsSectionState extends State<CardsSectionAlignment>
       frontCardAlign = defaultFrontCardAlign;
       frontCardRot = 0.0;
     });
-    if(cards.length < 4) {
-      addCards(4);
+    if(cards.length < 10) {
+      addCards(10);
     }
   }
 

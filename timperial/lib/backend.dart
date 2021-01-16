@@ -47,6 +47,7 @@ abstract class BaseBackend {
   Future<bool> amFollowing(String userFirestoreID);
 
   Future<DocumentSnapshot> getOwnUser({bool reload});
+  void reloadOwnUser();
   Future<QuerySnapshot> getMatches();
 
   void postUserComment(String postID, String text);
@@ -74,6 +75,7 @@ abstract class BaseBackend {
   void addRightSwipe(String matchID);
   void addLeftSwipe(String matchID);
   void addMatch(DocumentSnapshot matchDocument);
+  void report(String reportedID);
 }
 
 class Backend implements BaseBackend {
@@ -1015,9 +1017,7 @@ class Backend implements BaseBackend {
   }
 
   void reloadOwnUser() async {
-    if(ownUserID == null) {
-      ownUserID = await getOwnUserID();
-    }
+    ownUserID = await getOwnUserID();
     ownUserDocument = await _firestore.collection('users').document(ownUserID).get();
   }
 
@@ -1142,47 +1142,41 @@ class Backend implements BaseBackend {
   }
 
   Future<QuerySnapshot> getRecommendedProfiles(int quantity, List<String> excluded) async {
+
+    if(debugLevel >= 1) {
+      print("[FUNCTION INVOKED] Backend.getRecomendedProfiles");
+      print("[FUNCTION ARGS][Backend.getRecommendedProfiles] quantity: ${quantity.toString()}, excluded: ${excluded.toString()}");
+    }
+
     DocumentSnapshot user = await getOwnUser();
     String gender = user.data["gender"];
     String preference = user.data["preference"];
     List<String> final_ids;
     List<String> potential_ids = [];
     DocumentSnapshot user_ids = await _firestore.collection('online_variables').document('user_ids').get();
-    excluded.addAll(user.data["swipes"]);
-
-    if(user.data["gender"] == "male") {
-      List<String> potential_ids = user_ids.data["female_ids"];
-      excluded.forEach((id) => {potential_ids.remove(id)});
-      potential_ids.shuffle();
-      final_ids = potential_ids.sublist(0, quantity - 1);
-    } else {
-      List<String> potential_ids = user_ids.data["male_ids"];
-      excluded.forEach((id) => {potential_ids.remove(id)});
-      potential_ids.shuffle();
-      final_ids = potential_ids.sublist(0, quantity - 1);
-    }
+    excluded.addAll(user.data["swipes"].cast<String>());
 
     if(gender == "male") {
       if(preference == "looking for men") {
         // gay dudes
-        potential_ids.addAll(user_ids.data["homosexual_male_ids"]);
+        potential_ids.addAll(user_ids.data["homosexual_male_ids"].cast<String>());
       } else if (preference == "looking for women") {
         // straight dudes
-        potential_ids.addAll(user_ids.data["hetrosexual_female_ids"]);
+        potential_ids.addAll(user_ids.data["hetrosexual_female_ids"].cast<String>());
       } else { // preference == "looking for both"
         // bi dudes
-        potential_ids.addAll(user_ids.data["homosexual_male_ids"] + user_ids.data["hetrosexual_female_ids"]);
+        potential_ids.addAll(user_ids.data["homosexual_male_ids"].cast<String>() + user_ids.data["hetrosexual_female_ids"].cast<String>());
       }
     } else if (gender == "female") {
       if(preference == "looking for men") {
         // straight gals
-        potential_ids.addAll(user_ids.data["hetrosexual_male_ids"]);
+        potential_ids.addAll(user_ids.data["hetrosexual_male_ids"].cast<String>());
       } else if (preference == "looking for women") {
         // lesbian gals
-        potential_ids.addAll(user_ids.data["homosexual_female_ids"]);
+        potential_ids.addAll(user_ids.data["homosexual_female_ids"].cast<String>());
       } else { // preference == "looking for both"
         // bi gals
-        potential_ids.addAll(user_ids.data["hetrosexual_male_ids"] + user_ids.data["homosexual_female_ids"]);
+        potential_ids.addAll(user_ids.data["hetrosexual_male_ids"].cast<String>() + user_ids.data["homosexual_female_ids"].cast<String>());
       }
     } else {
       if(preference == "looking for men") {
@@ -1193,13 +1187,24 @@ class Backend implements BaseBackend {
         potential_ids.addAll(user_ids.data["hetrosexual_female_ids"] + user_ids.data["homosexual_female_ids"]);
       } else { // preference == "looking for both"
         // straight dudes, gay dudes, straight gals and lesbian gals
-        potential_ids.addAll(user_ids.data["hetrosexual_male_ids"] + user_ids.data["homosexual_male_ids"] + user_ids.data["hetrosexual_female_ids"] + user_ids.data["homosexual_female_ids"]);
+        potential_ids.addAll(user_ids.data["hetrosexual_male_ids"].cast<String>() + user_ids.data["homosexual_male_ids"].cast<String>() + user_ids.data["hetrosexual_female_ids"].cast<String>() + user_ids.data["homosexual_female_ids"].cast<String>());
       }
     }
 
     excluded.forEach((id) => {potential_ids.remove(id)});
     potential_ids.shuffle();
-    final_ids = potential_ids.sublist(0, quantity - 1);
+    if(potential_ids.length > quantity) {
+      final_ids = potential_ids.sublist(0, quantity - 1);
+    } else if (potential_ids.isNotEmpty) {
+      final_ids = potential_ids;
+    } else {
+      final_ids = ["notarealid"];
+    }
+
+    if(debugLevel >= 2) {
+      print("[FUNCTION VARS][Backend.getRecommendedProfiles] potential_ids: ${potential_ids.toString()}");
+      print("[FUNCTION VARS][Backend.getRecommendedProfiles] final_ids: ${final_ids.toString()}");
+    }
 
     return _firestore.collection('users').where('user_id', whereIn: final_ids).limit(quantity).getDocuments();
   }
@@ -1295,6 +1300,20 @@ class Backend implements BaseBackend {
         "snapchat":matchSnapchat,
         "picture_url":matchPictureURL
       }
+    });
+  }
+
+  void report(String reportedID) async {
+    if(debugLevel >= 1) {
+      print("[FUNCTION INVOKED] Backend.report");
+      print("[FUNCTION ARGS][Backend.report] reportedID: $reportedID");
+    }
+
+    String userID = await getOwnUserID();
+
+    _firestore.collection('reports').add({
+      "reporter":userID,
+      "reported":reportedID
     });
   }
 }

@@ -63,6 +63,7 @@ class Constants {
   static TextStyle ACTION_SHEET_TITLE = GoogleFonts.getFont('Roboto', color: DARK_TEXT, fontSize: 15.0, fontWeight:  FontWeight.w900);
   static TextStyle ACTION_SHEET_TEXT = GoogleFonts.getFont('Roboto', color: DARK_TEXT, fontSize: 17.0, fontWeight:  FontWeight.w500);
   static TextStyle FLAT_BUTTON_STYLE = TextStyle(color: Constants.IMPERIAL_MEDIUM_BLUE, fontWeight: FontWeight.w800, fontSize: 16.5);
+  static TextStyle FLAT_RED_BUTTON_STYLE = TextStyle(color: Constants.SELECTED_ICON_COLOR, fontWeight: FontWeight.w800, fontSize: 16.5);
 }
 
 enum language {

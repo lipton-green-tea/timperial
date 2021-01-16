@@ -3,14 +3,16 @@ import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:timperial/auth.dart';
 import 'package:timperial/config.dart';
+import 'package:timperial/backend.dart';
 
 class LoginPage extends StatefulWidget {
-  LoginPage({this.auth, this.onSignedIn, this.toUnverifiedPage, this.toCreateAccountPage});
+  LoginPage({this.auth, this.onSignedIn, this.toUnverifiedPage, this.toCreateAccountPage, this.toForgotPasswordPage});
 
-  BaseAuth auth;
+  final BaseAuth auth;
   final VoidCallback onSignedIn;
   final VoidCallback toUnverifiedPage;
   final VoidCallback toCreateAccountPage;
+  final VoidCallback toForgotPasswordPage;
 
   @override
   _LoginPageState createState() => _LoginPageState();
@@ -19,8 +21,10 @@ class LoginPage extends StatefulWidget {
 class _LoginPageState extends State<LoginPage> {
 
   final formKey = new GlobalKey<FormState>();
+
   String _email;
   String _password;
+  BaseBackend backend = new Backend();
 
   bool validateAndSave() {
     final form = formKey.currentState;
@@ -37,6 +41,7 @@ class _LoginPageState extends State<LoginPage> {
     if(validateAndSave()) {
       try {
         FirebaseUser user = await widget.auth.signInWithEmailAndPassword(_email, _password);
+        backend.reloadOwnUser();
         if(user.isEmailVerified) {
           widget.onSignedIn();
         } else {
@@ -174,7 +179,7 @@ class _LoginPageState extends State<LoginPage> {
                   'Forgot Passsword?',
                   style: Constants.TEXT_STYLE_HINT_LIGHT,
                 ),
-                onPressed: moveToForgotPassword,
+                onPressed: widget.toForgotPasswordPage,
               ),
             ),
           ),
