@@ -44,7 +44,7 @@ class _CreateAccountPageState extends State<CreateAccountPage> {
                     child: SingleChildScrollView(
                       scrollDirection: Axis.vertical,
                       child: Text(
-                          Constants.EULA_AGREEMENT_TEXT
+                        Constants.EULA_AGREEMENT_TEXT,
                       ),
                     ),
                   ),
@@ -132,12 +132,18 @@ class _CreateAccountPageState extends State<CreateAccountPage> {
     if(_currentPage == Page.verify) {
       return [
         SizedBox(height: 150),
-        Text("You should have recieved a verification link in your email. Please verify your email and log in using the email and password you provided")
+        Text(
+          "You should have recieved a verification link in your email. Please verify your email and log in using the email and password you provided",
+          style: Constants.TEXT_STYLE_LIGHT,
+        )
       ];
     } else if (_currentPage == Page.eula) {
       return [
         SizedBox(height: 90),
-        Text("Please read and accept the following terms and conditions to keep using the app"),
+        Text(
+          "Please read and accept the following terms and conditions to keep using the app",
+          style: Constants.TEXT_STYLE_LIGHT,
+        ),
         SizedBox(height: 16.0,),
         Expanded(
           flex: 8,

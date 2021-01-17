@@ -43,7 +43,43 @@ class Constants {
 
 
   static String DEFAULT_PROFILE_PICTURE_LOCATION = 'gs://bloopr-test.appspot.com/app/images/profile_image_placeholder.png';
-  static String EULA_AGREEMENT_TEXT = "Welcome to Bloopr \n This agreement governs your use of Bloopr. When you create an account or use bloopr, you agree to these terms.\nIf you wish to end this agreement email unsubscribe@bloopr.org\nSection 1: Safety\nBloopr includes User Generated content Objectionable Content\nObjectionable content including but not limited to Racism, Hate speech and sexual content is not tolerated unequivocally. Users are able to select “report” to report objectionable content. Any content that is flagged or found to be “objectionable” will be reviewed and removed appropriately within 24hrs of a flagging. Any individual who violates our policy of “Objectionable Content” will have their use of the app suspended then terminated. By accepting this license agreement you are accepting this policy All content queries can alternatively be resolved at report@bloopr.orgData SecurityOur app empoys security measure to ensure proper handling of user data and will not distribute itto a third party (See Section 5 for more information). \nSection 2: Performance\nThis app complies with the regulations surrounding bugs and performance. Test flight will only be used as it is stated in Section 2 of https://developer.apple.com/app-store/review/guidelines/#safetyThe meta data we include on the app store is appropriate to all audiences and complies with the rules specified with on the Apple App review wesbite. The app is selfcontained and does not execute any external processes. \nSection 3: Business\nThis app does not include any in app purchases nor does it cost any money to download nor doesit generate revenue of any currency including but not limited to cryptocurrency or have any form of monetization including but not limited to adverts. Nor does it facillate payments of third party apps and complies with the regulations indicated by apple. \nSection 4: Design\nThis App is independently designed and is unique. Our app does not use a third party signin service\nSection 5: Legal\nOur app complies with all local, national and international laws Our App employs careful privacy strategies detailed below:Data We Collect..When you, the user, creates an account we collect your email address. We collect your interactions with the app, including the posts that you upload and comments you add. We will never distribute your email address to a third party, nor will we make your account details public or give a third party access to them. You are able to withdraw permission to every agreement. This app complies with the General Data Protection Law. Any images or comments that you input onto the app are made publicly available to any other user on the app. When you upload an image the app and all its users are able to share and distribute this data freely. We employ data minimization and only request data that is significant to allow the app to function. We will respect the users permission settings. This app complies with and abides to the COPPA and (EU)GDPR We do not collect any other data other than the aforementioned. Restrictions on Use: You shall use the Application strictly in accordance with the SEULA agreement along with these Related Agreements and shall not a.Decompile the application adapt or obtain the source codeb.Vioate any applicable laws, rules or regulations in connection to your use of the appc.Use the app for any commercial purpose it was not intended ford.Make the app available on another platforme.Use the app for creating a product service or software that is directly or indirectly competitive with the services offered with this appf.Use any proprietary information or interfaces or other intellectual property of the company. We will not attempt to manipulate customers or use the data they provide or attempt o gain access to more data.";
+  static String EULA_AGREEMENT_TEXT = '''End-User License Agreement (EULA) of timperial
+This End-User License Agreement ("EULA") is a legal agreement between you and Stok Industries. Our EULA was created by EULA Template for timperial.
+
+This EULA agreement governs your acquisition and use of our timperial software ("Software") directly from Stok Industries or indirectly through a Stok Industries authorized reseller or distributor (a "Reseller"). Our Privacy Policy was created by the Privacy Policy Generator.
+
+Please read this EULA agreement carefully before completing the installation process and using the timperial software. It provides a license to use the timperial software and contains warranty information and liability disclaimers.
+
+If you register for a free trial of the timperial software, this EULA agreement will also govern that trial. By clicking "accept" or installing and/or using the timperial software, you are confirming your acceptance of the Software and agreeing to become bound by the terms of this EULA agreement.
+
+If you are entering into this EULA agreement on behalf of a company or other legal entity, you represent that you have the authority to bind such entity and its affiliates to these terms and conditions. If you do not have such authority or if you do not agree with the terms and conditions of this EULA agreement, do not install or use the Software, and you must not accept this EULA agreement.
+
+This EULA agreement shall apply only to the Software supplied by Stok Industries herewith regardless of whether other software is referred to or described herein. The terms also apply to any Stok Industries updates, supplements, Internet-based services, and support services for the Software, unless other terms accompany those items on delivery. If so, those terms apply.
+
+License Grant
+Stok Industries hereby grants you a personal, non-transferable, non-exclusive licence to use the timperial software on your devices in accordance with the terms of this EULA agreement.
+
+You are permitted to load the timperial software (for example a PC, laptop, mobile or tablet) under your control. You are responsible for ensuring your device meets the minimum requirements of the timperial software.
+
+You are not permitted to:
+
+Edit, alter, modify, adapt, translate or otherwise change the whole or any part of the Software nor permit the whole or any part of the Software to be combined with or become incorporated in any other software, nor decompile, disassemble or reverse engineer the Software or attempt to do any such things
+Reproduce, copy, distribute, resell or otherwise use the Software for any commercial purpose
+Allow any third party to use the Software on behalf of or for the benefit of any third party
+Use the Software in any way which breaches any applicable local, national or international law
+use the Software for any purpose that Stok Industries considers is a breach of this EULA agreement
+Intellectual Property and Ownership
+Stok Industries shall at all times retain ownership of the Software as originally downloaded by you and all subsequent downloads of the Software by you. The Software (and the copyright, and other intellectual property rights of whatever nature in the Software, including any modifications made thereto) are and shall remain the property of Stok Industries.
+
+Stok Industries reserves the right to grant licences to use the Software to third parties.
+
+Termination
+This EULA agreement is effective from the date you first use the Software and shall continue until terminated. You may terminate it at any time upon written notice to Stok Industries.
+
+It will also terminate immediately if you fail to comply with any term of this EULA agreement. Upon such termination, the licenses granted by this EULA agreement will immediately terminate and you agree to stop all access and use of the Software. The provisions that by their nature continue and survive will survive any termination of this EULA agreement.
+
+Governing Law
+This EULA agreement, and any dispute arising out of or in connection with this EULA agreement, shall be governed by and construed in accordance with the laws of gb.''';
 
   static TextStyle TEXT_STYLE_HEADER_DARK = GoogleFonts.getFont('Open Sans', color: DARK_TEXT, fontSize: 20.0);
   static TextStyle TEXT_STYLE_HEADER_GREY = GoogleFonts.getFont('Open Sans', color: GREY_TEXT, fontSize: 20.0);
