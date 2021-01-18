@@ -1191,7 +1191,12 @@ class Backend implements BaseBackend {
       }
     }
 
+    // run excluded 4 times as ids may appear up to 4 times (e.g. for a bisexual, bigendered user's id)
     excluded.forEach((id) => {potential_ids.remove(id)});
+    excluded.forEach((id) => {potential_ids.remove(id)});
+    excluded.forEach((id) => {potential_ids.remove(id)});
+    excluded.forEach((id) => {potential_ids.remove(id)});
+
     potential_ids.shuffle();
     if(potential_ids.length > quantity) {
       final_ids = potential_ids.sublist(0, quantity - 1);
